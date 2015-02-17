@@ -1,0 +1,23 @@
+orgvar | var| descr
+
+year| year| the year in which the observations were recorded
+top1perc | top1perc | income share of the top one percent including realized capital gains
+top1perc_nok | top1perc_nok | income share of the top one percent excluding realized capital gains
+topmtr | topmtr | top marginal tax rate on ordinary income
+topmtr_k | topmtr_k | top marginal tax rate on realized long-term capital gains
+incadult_nok | incadult_nok | average real cash market income excluding realized capital gains in thousand dollars
+incadulttop1_nok | incadulttop1_nok | average real cash market income excluding realized capital gains of the top one percent in thousand dollars
+incadultbot99_nok | incadultbot99_nok | average real cash market income excluding realized capital gains of the bottom 99 percent in thousand dollars
+incadulttop1_n | incadulttop1_n | average real cash market income of the top one percent including realized capital gains compared to 1913
+incadultbot99_n	| incadultbot99_n | average real cash market income of the bottom  99 percent including realized capital gains compared to 1913
+top_mtr | top_mtr | average marginal tax rate for the selected five-year time span
+top1_n | top1_n | average top one percent income share excluding realized capital gains for the selected five-year time span
+top1_k | top1_k | average top one percent income share including realized capital gains for the selected five-year time span
+country | country | the country for which the observations were made
+mtr | mtr | top marginal tax rate on ordinary income
+top1 | top1 | top one percent income share
+gdpcap | gdpcap | gross domestic product per capita adjusted for inflation and expressed in 2010 US dollars using Purchasing Power Parity as of 2010 (Data is complete only for Sweden and the US. For Switzerland, the data ends in 1995. For all other countries, data ends between 2005 and 2009. For the following countries the data starts after 1960: Denmark (1980), Ireland (1975), Italy (1974), Portugal (1976, with a gap for 1983-88) and Spain (1981))
+dmtr_perc | dmtr_perc | overall change in top marginal tax rate in percentage points between 1960 and 2010
+gdp_growth | gdp_growth | average GDP growth between 1960 and 2010
+ln_gdp_start | ln_gdp_start | logarithm of GDP in the first year of observation (1960)
+gdp_start_year | gdp_start_year | logarithmic deviation from average GDP (across countries) in the first year of observation (1960)
