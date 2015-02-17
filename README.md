@@ -1,6 +1,6 @@
-Authors: Jonas Send
+Author: Jonas Send
 
-A short description here
+In their paper **"Optimal Taxation of Top Labor Incomes: A Tale of Three Elasticities"** Thomas Piketty, Emmanuel Saez and Stefanie Stantcheva (2014) analyse the response of top earners to taxes and derive optimal tax rate formulas from their findings. In this interactive offline *R* Tutorial, we are going to gradually reproduce their study and discuss it.
 
 ## 1. Installation
 
@@ -11,7 +11,7 @@ if (!require(devtools))
 source_gist("gist.github.com/skranz/fad6062e5462c9d0efe4")
 install.rtutor(update.github=TRUE)
   
-install_github("skranz/RTutorTopIncomeTaxation")
+install_github("JonasSend/RTutorTopIncomeTaxation")
 ```
 
 ## 2. Show and work on the problem set
