@@ -3,9 +3,9 @@
   
 ```{r include=FALSE}
 
-ps.dir =  'C:/Users/Jonas/Desktop/WiWi Bachelor/Bachelorarbeit/Problem Set' # set to the folder in which this file is stored
-ps.file = 'Optimal Taxation of Top Labor Incomes.Rmd' # set to the name of this file
-user.name = '' # set to your user name
+ps.dir =  'D:/libraries/RTutorTopIncomeTaxation/RTutorTopIncomeTaxation/inst/ps/RTutorTopIncomeTaxation' # set to the folder in which this file is stored
+ps.file = 'Optimal Taxation of Top Labor Incomes_sample_solution.Rmd' # set to the name of this file
+user.name = 'Jane Doe' # set to your user name
 
 library(RTutor)
 check.problem.set('Optimal Taxation of Top Labor Incomes', ps.dir, ps.file, user.name=user.name, reset=FALSE)
@@ -69,6 +69,7 @@ In order to be able to translate the data into some expressive graphics, we have
 info("read.table()") # Run this line (Strg-Enter) to show info
 
 ```{r "1_1_a"}
+US.data = read.table("usdata.csv")
 ```
 
 The data set contains different macroeconomic values for the years 1913 to 2008 such as nominal GDP, marginal tax rates for top incomes and income shares of the top 1 percent for the United States of America. If you want to take a look at the data that you just loaded, click on the button *data* you can find above. If you are interested in more detailed information of the variables we are going to work with now, see the *info* section below.
@@ -103,6 +104,8 @@ info("Introduction to ggplot2") # Run this line (Strg-Enter) to show info
 Now try to plot the variable `top1perc` in dependency of the variable `year` with `ggplot`. Use `geom_line()` as in the example above and save your object as `p2`. Because now we only want to have a black line you can leave out the arguments `colour`, `linetype` and `size`. Don't forget to show your plot.
 
 ```{r "1_1_b_1"}
+p2 = ggplot(US.data) + geom_line(aes(year, top1perc))
+p2
 ```
 
 This plot shows how the share of overall income of the top 1 percent in the US has changed between 1913 and 2008. We are going to discuss the variable's behaviour later in more detail.
@@ -120,6 +123,8 @@ p1
 Now try to do the same and add a line which depicts the variable `top1perc_nok`, the top 1 percent income share excluding capital gains, to `p2`. As colour, use the hexadecimal code "#0000FF" which stands for the colour blue. Afterwards, show the plot.
 
 ```{r "1_1_b_2"}
+p2 = p2 + geom_line(aes(year, top1perc_nok), colour = "#0000FF")
+p2
 ```
 
 Now we want to look at both plots to get an impression of how the top marginal tax rates influenced the top income shares. That will give us a first chance to discuss implications for the three different elasticities that were mentioned at the beginning. For that reason we are going to use the function `grid.arrange()` from the package *gridExtra*. Take the two plots `p1` and `p2` and arrange them in one plot using the syntax `grid.arrange(plot1, plot2)`.
@@ -130,6 +135,7 @@ library(gridExtra)
 
 # Type in your command here:
 
+grid.arrange(p1, p2)
 ```
 
 In the first plot we can see the top marginal tax rate for ordinary income $r$ as a dashed line and for realized long-term capital gains as a dotted line. The second plot shows the top 1 percent income share including realized capital gains in black and excluding realized capital gains in blue. We can see that there is a clear negative correlation between top 1 percent income share and the top marginal tax rate for ordinary income (top MTR). Especially the rise in income share and drop in top MTR since the 1980s is really significant. If this is due to a causal relationship from top MTR to top income shares, the overall elasticity $e$ is high. Also note that the share of top income that is accounted for by capital gains (the difference between the black and the blue curve) doesn't seem to be correlated to the partly immense difference between top tax rates for normal income and top tax rates for long-term capital gains. According to Piketty et al., as capital gains are the main channel for tax avoidance, this indicates that tax avoidance response $e_2$ makes up only a small amount of $e$. 
@@ -141,6 +147,9 @@ Now you have to use everything that we worked on so far. First, create a ggplot-
 info("Variables of interest 2") # Run this line (Strg-Enter) to show info
 
 ```{r "1_1_b_4"}
+p3 = ggplot(US.data) + geom_line(aes(year, incadulttop1_n), colour = "blue")
+p3 = p3 + geom_line(aes(year, incadultbot99_n), colour = "purple")
+grid.arrange(p1, p3)
 ```
 
 We can see that income growth for the bottom 99 percent (purple) was highest between the beginning of the 1930s and the beginning of the 1970s, exactly the period during the last century when net-of-tax rates for the top 1 percent were low (due to a high top MTR). The growth for bottom 99 percent incomes has slowed down since about 1973, while top 1 percent incomes started to grow fast since the 1970s. This hints at the fact that the growth in top incomes might have come to the expense of bottom incomes which would translate into a high bargaining response of the top 1 percent and therefore into a high $e_3$.
@@ -198,6 +207,10 @@ Use the same commands and syntax to compute the average of `top1perc_nok` for th
 # 2004-2008 to 'top1_end_k'
 
 
+top1_start_n = mean(filter(US.data, year >= 1960 & year <= 1964)$top1perc_nok)
+top1_end_n = mean(filter(US.data, year >= 2004)$top1perc_nok)
+top1_start_k = mean(filter(US.data, year >= 1960 & year <= 1964)$top1perc)
+top1_end_k = mean(filter(US.data, year >= 2004)$top1perc)
 ```
 
 ### b) A first comparison
@@ -242,6 +255,12 @@ info("Why do we use 'log()' and '(1 - top MTR)'?") # Run this line (Strg-Enter) 
 
 # show e_stimate_k
 
+e_estimate_n = (log(top1_end_n) - log(top1_start_n)) /
+               (log(1 - topmtr_end) - log(1 - topmtr_start))
+e_estimate_k = (log(top1_end_k) - log(top1_start_k)) /
+               (log(1 - topmtr_end) - log(1 - topmtr_start))
+e_estimate_n
+e_estimate_k
 ```
 
 For both income including and income excluding capital gains, the estimated elasticity is around $0.52$. This means two things. First, if the rise in income shares is only due to the decrease in the top marginal tax rate, then the real overall elasticity $e$ is high with a little over $0.5$. Second, the two elasticities are almost the same. As capital gains are the main channel for tax avoidance, this implies that $e_2$ is close to zero.
@@ -258,6 +277,8 @@ Now it's time for you to answer a first short question. Fill in your answer in p
 # ordinary income)
 #
 # answer = "???" # Assign "a" or "b" to 'answer' and remove the comment
+
+answer = "a"
 ```
 
 You can click on the following *info* box to read an explanation of the answer to this quiz.
@@ -294,6 +315,7 @@ US.reg1 = lm(log(top1perc_nok) ~ log(1 - topmtr), data = US.data)
 Try to do the same regression on top income share including capital gains `top1perc` and assign it to the variable `US.reg2`.
 
 ```{r "1_3_a_1"}
+US.reg2 = lm(log(top1perc) ~ log(1 - topmtr), data = US.data)
 ```
 
 Now we can look at the two regressions utilizing the command `showreg()` from the package 'regtools':
@@ -323,6 +345,11 @@ info("Controlling for a variable") # Run this line (Strg-Enter) to show info
 To implement this regression, you can copy the code we used to get `US.reg1` and `US.reg2`. Then add the variable `year` to the regressors using the concatenator `+`. Safe these new time-trend-including regressions as `US.reg3` for the variable `top1perc_nok` and `US.reg4` for the variable `top1perc`. Then use `showreg()` to show the results. Adopt the manual model names from the last example.
 
 ```{r "1_3_a_2"}
+US.reg3 = lm(log(top1perc_nok) ~ log(1 - topmtr) + year, data = US.data)
+US.reg4 = lm(log(top1perc) ~ log(1 - topmtr) + year, data = US.data)
+showreg(list(US.reg3, US.reg4), 
+        custom.model.names = c("capital gains excluded", 
+                               "capital gains included"))
 ```
 
 Again, we receive a significant positive elasticity with around $0.3$. Again, with no notable difference between the two income shares. Our results are therefore robust to including a time trend. Piketty et al. conclude that this means that there is presumably a strong link between top marginal tax rates and top 1 percent shares and that tax avoidance effects (expressed through $e_2$) tend to be small, just as we expected when looking at the summarizing plots from *Exercise 1.1*. 
@@ -347,6 +374,7 @@ US.reg6 = lm(log(incadultbot99_nok) ~ log(1 - topmtr) + year, data = US.data)
 
 # Do the last one for 'incadult_nok':
 
+US.reg7 = lm(log(incadult_nok) ~ log(1 - topmtr) + year, data = US.data)
 ```
 
 So far, we have only used the standard linear regression which uses the assumption that the variance of the error term is constant (known as homoscedasticity). This might not be true and might simulate significance of results that are not significant. In their paper, for their regressions on the US data Piketty et al. use a more robust version, a Newey-West regression with 8 lags, to be exact. This type of regression is put into use to deal with autocorrelation and heteroskedasticity. To find out more, click the *info*-button below.
@@ -401,6 +429,10 @@ At the end of this exercise, let us do a little quiz. Remember, you just need to
 # Question 3: Can we be sure yet, that our preliminary conclusions reflect
 # reality?
 # answer3 = "???" # Assign "yes" or "no" to answer3 and remove the comment 
+
+answer1 = "c"
+answer2 = "no"
+answer3 = "no"
 ```
 
 For more information, especially on *question 3* of our little quiz, click the *info*-section below.
@@ -429,6 +461,7 @@ library(foreign)
 
 # Then, upload the data:
 
+Int.data = read.dta("intdata.dta")
 ```
 
 This data set contains the three macroeconomic values marginal tax rates for top incomes as `mtr`, income shares of the top 1 percent `top1` and real GDP per capita `gdpcap` from 18 different OECD countries for the years 1960 to 2010. For some variables, the data is not complete over the whole time span for some countries. See the *Data Explorer* for more information.
@@ -478,6 +511,10 @@ Now, deploying the motion chart, we want to do a little quiz:
 # a) Canada
 # b) Japan
 # answer3 = "???" # Assign "a" or "b" to 'answer3' and remove the comment
+
+answer1 = "no"
+answer2 = "yes"
+answer3 = "a"
 ```
   
   
@@ -497,11 +534,16 @@ info("Country fixed effects") # Run this line (Strg-Enter) to show info
 Implement this regression on our data set `Int.data` using the `lm()` command, just as you did in *Exercise 1.3*. Note that you can add the variable `country` to the regressors the same way as you did with the variable `year`. Top net-of-tax rate can be obtained using `(1 - mtr)`. Save the regression as `Int.reg1`.
 
 ```{r "2_1_b_1"}
+Int.reg1 = lm(log(top1) ~ log(1 - mtr) + country, data = Int.data)
 ```
 
 In the motion chart we were able to observe that the strength of the correlation between top net-of-tax rates and top income shares increased over time. That's why we want to do the exact same regression we have just done for the two time spans until 1980 and from 1981. To do that, use the `filter()`-command to pass `lm` the correct data and save the regression for the first period as `Int.reg2` and for the second period as `Int.reg3`.
 
 ```{r "2_1_b_2"}
+Int.reg2 = lm(log(top1) ~ log(1 - mtr) + country,
+              data = filter(Int.data, year <= 1980))
+Int.reg3 = lm(log(top1) ~ log(1 - mtr) + country,
+              data = filter(Int.data, year >= 1981))
 ```
 
 Let's take a look at the results from our three regressions. Remember how we used Newey West standard errors in *Exercise 1.3*? This time we are going to use another type of standard errors that is very often used to obtain a robust regression by utilizing a standard function of the `showreg()` command.
@@ -554,6 +596,8 @@ Use the *data*-button to take a look at `Int_growth.data`. You can see that it h
 Now, let's see if you still remember the things that we've learned in *Exercise 1.1*: Create the ggplot object `p1` that uses the new created data and depicts average GDP growth `gdp_growth` in dependency of overall top MTR change `dmtr_perc` as blue points that have the size `3.5`. Note: points can be depicted with `geom_point` instead of `geom_line`. Don't forget to add `size` to its arguments.
 
 ```{r "2_2_a"}
+p1 = ggplot(Int_growth.data) + geom_point(aes(dmtr_perc, gdp_growth),
+                                          colour = "blue", size = 3.5)
 ```
 
 Before we plot `p1` we are going to add expressive labels to our plot. In addition, we are going to use the theme that is used by the weekly newspaper "The Economist" for their plots. This function is provided by the package *ggthemes*. (Again, this example is intended rather as a stimulus than for you to completely internalize.)
@@ -614,6 +658,9 @@ ln_gdp_start_avg
 Now it's your turn, again. Use `mutate()` to add a column to Int.data with the name `gdp_start_year` which depicts the product of `(ln_gdp_start - ln_gdp_start_avg)` and `(year - 1960)`. Note that you have to group the data by country, again.
 
 ```{r "2_2_b"}
+Int.data = mutate(group_by(Int.data, country), 
+                  gdp_start_year = (ln_gdp_start - ln_gdp_start_avg) *
+                                   (year - 1960))
 ```
 
 The purpose of the variable `gdp_start_year` is to test for the influence initial GDP has on GDP growth. It is negative if initial GDP is below average and vice versa. (Again, the use of the *Data Explorer* can be useful.)
@@ -716,6 +763,11 @@ Let's do a quiz to internalize these first findings.
 # b) x = y
 # c) Can't say
 # answer = "???" # Assign "a", "b" or "c" to 'answer' and remove the comment
+
+h = "-"
+k = "-"
+d = "+"
+answer = "a"
 ```
 
 We can now also express the three elasticities that we used throughout this problem set so far in formulas:
@@ -788,6 +840,10 @@ With the derivation of the optimal top tax rate $r^*$ we have reached the main p
 # b) r* decreases
 # c) r* stays the same
 # answer3 = "???" # Assign "a", "b" or "c" to 'answer3' and remove the comment
+
+answer1 = "a"
+answer2 = "b"
+answer3 = "a"
 ```
 
 Great, now we have worked through the model that we will use to explain the observations we can make in our data. Before you move on, you can click the *info*-sections below if you want to find out how we can prove that in the optimal case $t^*=r^*$ or if you are interested in what would happen in our model if we had a positive social welfare weight on consumption of top earners.
@@ -869,6 +925,7 @@ a = 1.2
 
 # Then, you can type in your formula here:
 
+(1+t*a*e2+a*e3)/(1+a*e)
 ```
 
 Now, we write a function named `top.tax` that gets passed the variables we need in the following order: $e$, $e_2$, $e_3$, $t$, $a$. Then, the function returns the optimal top tax rate, using the computation that we wrote in the last code chunk.
@@ -882,6 +939,7 @@ top.tax = function(e,e2,e3,t,a){
 Now it's time to test our function. Let us assume that the variables have the following values: $e = 0.35$, $e_2=0.1$, $e_3=0.05$, $t=0.25$ and $a=1.8$. Call the function `top.tax` with these values. Make sure to use the values in the right order or, alternatively, assign the variables manually: `(e2 = 0.1, e = 0.35, ...)`.
 
 ```{r "3_2_2"}
+top.tax(0.35, 0.1, 0.05, 0.25, 1.8)
 ```
 
 As you can see, the values we used for the different elasticities, taxes and parameters lead to an optimal top tax rate of about $70\%$.
@@ -914,6 +972,8 @@ Now, call the function `top.tax(e,e2,e3,t,a)` with the corresponding values to f
 
 # show the variable
 
+top_tax_supply = top.tax(0.5, 0, 0, 0.2, 1.5)
+top_tax_supply
 ```
 
 As you can see, in our model the values that we chose for the supply-side scenario lead to an optimal top tax rate $r^*=57\%$.
@@ -930,6 +990,8 @@ Again, call the function `top.tax(e,e2,e3,t,a)` with these values and assign the
 
 # show the variable
 
+top_tax_avoidance = top.tax(0.5, 0.3, 0, 0.2, 1.5)
+top_tax_avoidance
 ```
 
 We can observe that, now, we obtain a revenue-maximizing top tax rate of $r^*=62\%$ which is higher than in the standard supply-side scenario. This is due to the fiscal externality that is created by the fact that some of the income that is shifted away from ordinary income can still be taxed as sheltered income with the tax rate $t$.
@@ -947,6 +1009,8 @@ One last time, translate these estimates into a top marginal tax rate $r^*$ util
 
 # show the variable
 
+top_tax_bargaining = top.tax(0.5, 0, 0.3, 0.2, 1.5)
+top_tax_bargaining
 ```
 
 In our model, you can observe that this scenario leads to the by far highest optimal top tax rate $r^*$. This is due to the fact that we assumed that compensation bargaining is harmful and hence is tried to be avoided by the government.

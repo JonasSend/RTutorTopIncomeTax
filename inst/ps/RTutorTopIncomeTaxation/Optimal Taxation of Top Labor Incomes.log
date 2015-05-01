@@ -1,0 +1,4 @@
+{"type":["init_ps"],"time":["2015-05-01 09:32:45"],"user":["GUEST"],"umph":[1430465565.5909],"ok":[true]}
+,
+{"type":["check_chunk"],"time":["2015-05-01 09:33:04"],"user":["GUEST"],"umph":[1430465584.1025],"ok":[false],"chunk":[1],"ex":[2],"e.ind":[0],"code":["US.data = read.table(\"usdata.csv\")"],"message":["evaluation error in \n  US.data = read.table(\"usdata.csv\")\n  Error in file(file, \"rt\"): cannot open the connection\n"]}
+,
