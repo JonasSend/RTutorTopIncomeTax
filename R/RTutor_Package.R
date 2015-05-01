@@ -3,7 +3,7 @@ ps.pkg.info = function() {
   package = "RTutorTopIncomeTaxation"
   
   # Name of problem sets in the package
-  ps = c("RTutorTopIncomeTaxation")
+  ps = c("Optimal Taxation of Top Labor Incomes")
   
   list(package=package, ps = ps)
 }
