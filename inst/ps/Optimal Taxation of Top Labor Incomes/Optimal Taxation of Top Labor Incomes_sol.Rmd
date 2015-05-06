@@ -1,22 +1,25 @@
 # Problem Set Optimal Taxation of Top Labor Incomes
 
-  
-```{r include=FALSE}
-
-ps.dir =  'C:/Users/Jonas/Desktop/WiWi Bachelor/Bachelorarbeit/Problem Set' # set to the folder in which this file is stored
-ps.file = 'Optimal Taxation of Top Labor Incomes_sample_solution.Rmd' # set to the name of this file
-user.name = 'Jane Doe' # set to your user name
-
-library(RTutor)
-check.problem.set('Optimal Taxation of Top Labor Incomes', ps.dir, ps.file, user.name=user.name, reset=FALSE)
-
-# To check your solution in RStudio save (Ctrl-S) and then run all chunks (Ctrl-Alt-R)
-```
-Name: `r user.name`
-
-
 Author:  Jonas Send   
 
+#< ignore
+Run code below to generate and show the problem set
+```{r " "}
+library(RTutor)
+
+#setwd("C:/Users/Jonas/Desktop/Bachelorarbeit/Problem Set") #adapt path
+setwd("D:/libraries/RTutorTopIncomeTaxation/RTutorTopIncomeTaxation/inst/ps/RTutorTopIncomeTaxation")
+ps.name = "Optimal Taxation of Top Labor Incomes"
+sol.file = paste0(ps.name, "_sol.Rmd")
+libs = c("ggplot2", "gridExtra", "dplyr", "regtools", "sandwich", "foreign", "googleVis", "ggthemes")
+
+# Generate problem set files in working directory
+create.ps(sol.file = sol.file, ps.name = ps.name, user.name = NULL,libs = libs, var.txt.file = "Optimal_Top_Labor_Taxation_Var.txt", stop.when.finished = FALSE)
+
+# Show in webbrowser. You can adapt the argumets below
+show.shiny.ps(ps.name, load.sav = FALSE, launch.browser = TRUE, sample.solution = TRUE, is.solved = FALSE)
+```
+#>
 
 In their paper **"Optimal Taxation of Top Labor Incomes: A Tale of Three Elasticities"** Thomas Piketty, Emmanuel Saez and Stefanie Stantcheva (2014) analyse the response of top earners to taxes and derive optimal tax rate formulas from their findings. In this interactive offline *R* Tutorial, we are going to gradually reproduce their study and discuss it.  
 (The article and the corresponding public data is provided on the website of the *American Economic Association*. You can click on this [link](https://www.aeaweb.org/articles.php?doi=10.1257/pol.6.1.230) to download it.)
@@ -66,15 +69,30 @@ In this exercise we are going to analyse macroeconomic data from the US for the 
 
 In order to be able to translate the data into some expressive graphics, we have to load the data into our work space. In the directory of your problem set, you should have saved the file *usdata.csv*. Use the command `read.table()` to load the data and assign it to a variable called `US.data`. Type your code into the open window below. To continue, click the *check*-button to find out whether your solution is correct. If you need help, click the *hint*-button to get some clues on how to solve the problem. If you want more information on the `read.table()`-command you can click the *info*-button below.
 
-info("read.table()") # Run this line (Strg-Enter) to show info
+#< info "read.table()"
+`data = read.table("tablename")` loads the data with the name *tablename* and assigns it to a data frame `data`. You have to use quotation marks for the name of the data file.
+
+Note: Whenever you are working in an *R* environment and want to find out more about a function or a package `name` you can use `?name` or `help(name)` to display documentation and receive further information. As this is not working in this html problem set, there will always be a short introduction into new commands and packages that we utilize.
+#>
 
 ```{r "1_1_a"}
 US.data = read.table("usdata.csv")
+#< hint
+display("'data = read.table(\"tablename\")' is the basic construction of the command. You now only have to change the names of your variable and of the data file. And remember to use quotation marks for the file name.")
+#>
 ```
 
 The data set contains different macroeconomic values for the years 1913 to 2008 such as nominal GDP, marginal tax rates for top incomes and income shares of the top 1 percent for the United States of America. If you want to take a look at the data that you just loaded, click on the button *data* you can find above. If you are interested in more detailed information of the variables we are going to work with now, see the *info* section below.
 
-info("Variables of interest 1") # Run this line (Strg-Enter) to show info
+#< info "Variables of interest 1"
+* `top1perc` = income shares of the top 1 percent
+
+* `top1perc_nok` = income shares of the top 1 percent excluding realized capital gains
+
+All income share data in this data set is based on family income and we assume that individual income shares are the same as family based shares.
+* `topmtr` = top marginal tax rate on ordinary income; Note that this variable depicts $r$ as discussed in the introduction. That means, we can calculate the top net-of-tax rate via `1 - topmtr`.
+* `topmtr_k` = top marginal tax rate on realized long-term capital gains
+#>  
   
 ### b) Plotting the data
 
@@ -82,6 +100,7 @@ First, we are going to try to get a graphical view of the data at hand. For that
 Here is an example of how to use the function `ggplot()` from the aforementioned package to plot the variable `topmtr` over time. Just click the *check* button to see the plot:
 
 ```{r "1_1_b_example_1"}
+#< task
 # load the required package 'ggplot2' from the library:
 library(ggplot2)
 
@@ -95,16 +114,25 @@ p1 = ggplot(US.data) + geom_line(aes(year, topmtr), colour = "red",
 
 # show the plot:
 p1
+#>
 ```
 
 This plot illustrates how the top marginal tax rate on ordinary income in the US has changed during the last century.
 
-info("Introduction to ggplot2") # Run this line (Strg-Enter) to show info
+#< info "Introduction to ggplot2"
+The package *ggplot2* provides a wide array of tools that allow you to create expressive and elegant plots. According to its creator Wickham (2009) it implements the grammar of graphics developed by Wilkinson (2005) which breaks up graphs into elements that can be versatilely combined.  
+We are often going to use the function `ggplot()` which uses this grammar to enable the user to incorporate various geometrical objects (geoms) such as lines, points, etc. in their plots.
+
+Note: *ggplot2* also contains the function `qplot()` which stands for "quick plot". But as `ggplot()` offers a wider variety of functions and we are going to create rather complex plots, in this problem set we are only going to talk about `ggplot()`. 
+#>
 
 Now try to plot the variable `top1perc` in dependency of the variable `year` with `ggplot`. Use `geom_line()` as in the example above and save your object as `p2`. Because now we only want to have a black line you can leave out the arguments `colour`, `linetype` and `size`. Don't forget to show your plot.
 
 ```{r "1_1_b_1"}
 p2 = ggplot(US.data) + geom_line(aes(year, top1perc))
+#< hint
+display("Take a look at the example from before. The syntax stays the same, you just have to change the name of the plot and assign a different variable to y. Also remember that you only have to use the 'aes()' argument")
+#>
 p2
 ```
 
@@ -113,29 +141,39 @@ This plot shows how the share of overall income of the top 1 percent in the US h
 You can add new geometrical objects (geoms) to your plot as shown in the following example where a dotted red line that depicts the development of the top marginal tax rate on realized long-term capital gains over time is added to `p1`:
 
 ```{r "1_1_b_example_2"}
+#< task
 p1 = p1 + geom_line(aes(year, topmtr_k), colour = "red", linetype = "dotted",
                     size = 1)
 # You can add any number of geoms to a ggplot object.
 
 p1
+#>
 ```
 
 Now try to do the same and add a line which depicts the variable `top1perc_nok`, the top 1 percent income share excluding capital gains, to `p2`. As colour, use the hexadecimal code "#0000FF" which stands for the colour blue. Afterwards, show the plot.
 
 ```{r "1_1_b_2"}
 p2 = p2 + geom_line(aes(year, top1perc_nok), colour = "#0000FF")
+#< hint
+display("Again, a look at the example should help. Note that you have to use quotation marks for the hexadecimal code of the colour.")
+#>
 p2
 ```
 
 Now we want to look at both plots to get an impression of how the top marginal tax rates influenced the top income shares. That will give us a first chance to discuss implications for the three different elasticities that were mentioned at the beginning. For that reason we are going to use the function `grid.arrange()` from the package *gridExtra*. Take the two plots `p1` and `p2` and arrange them in one plot using the syntax `grid.arrange(plot1, plot2)`.
 
 ```{r "1_1_b_3"}
+#< task
 # load the required package from the library:
 library(gridExtra)
 
 # Type in your command here:
 
+#> 
 grid.arrange(p1, p2)
+#< hint
+display("The syntax for the command you have to use is 'grid.arrange(plot1, plot2)'. Now use the names of the two plots you want to compare instead of 'plot1' and 'plot2'.")
+#>
 ```
 
 In the first plot we can see the top marginal tax rate for ordinary income $r$ as a dashed line and for realized long-term capital gains as a dotted line. The second plot shows the top 1 percent income share including realized capital gains in black and excluding realized capital gains in blue. We can see that there is a clear negative correlation between top 1 percent income share and the top marginal tax rate for ordinary income (top MTR). Especially the rise in income share and drop in top MTR since the 1980s is really significant. If this is due to a causal relationship from top MTR to top income shares, the overall elasticity $e$ is high. Also note that the share of top income that is accounted for by capital gains (the difference between the black and the blue curve) doesn't seem to be correlated to the partly immense difference between top tax rates for normal income and top tax rates for long-term capital gains. According to Piketty et al., as capital gains are the main channel for tax avoidance, this indicates that tax avoidance response $e_2$ makes up only a small amount of $e$. 
@@ -144,19 +182,33 @@ While we already could get a vague idea of the dimensions of overall elasticity 
 
 Now you have to use everything that we worked on so far. First, create a ggplot-object `p3` in which you plot `incadulttop1_n` in dependency of the variable `year` as a line. Use the colour "blue". Then, add a line which depicts `incadultbot99_n` over time in the colour "purple" to `p3`. At last, plot `p1` together with `p3`, using the command `grid.arrange()`. If you need help, feel free to use the *hint*-button.
 
-info("Variables of interest 2") # Run this line (Strg-Enter) to show info
+#< info "Variables of interest 2"
+* `incadulttop1_n` = income of the top 1 percent of the US population, adjusted for inflation; income in 1913 serves as base and has the value 100
+* `incadultbot99_n` = income of the bottom 99 percent of the US population, adjusted for inflation; also in relation to 1913
+#>
 
 ```{r "1_1_b_4"}
 p3 = ggplot(US.data) + geom_line(aes(year, incadulttop1_n), colour = "blue")
+#< add_to_hint
+display("A look at the first given example, where we plotted 'topmtr' over time, should help.")
+#>
 p3 = p3 + geom_line(aes(year, incadultbot99_n), colour = "purple")
+#< hint
+display("You have to use a command of the form 'p3 + geom_line(...)'. If you have problems, take a look at the example where we added a line for 'topmtr_k' to the plot 'p1'. And don't forget to use the colour \"pruple\".")
+#>
 grid.arrange(p1, p3)
+#< hint
+display("Use the same command as in the last chunk, you only have to change one digit.")
+#>
 ```
 
 We can see that income growth for the bottom 99 percent (purple) was highest between the beginning of the 1930s and the beginning of the 1970s, exactly the period during the last century when net-of-tax rates for the top 1 percent were low (due to a high top MTR). The growth for bottom 99 percent incomes has slowed down since about 1973, while top 1 percent incomes started to grow fast since the 1970s. This hints at the fact that the growth in top incomes might have come to the expense of bottom incomes which would translate into a high bargaining response of the top 1 percent and therefore into a high $e_3$.
 
 By means of plotting our data, we could already draw first conservative conclusions about correlations between top net-of-tax rates and top 1 percent incomes. We also were able to get a first idea of the influence the three different elasticities have on the overall elasticity. But while it is nice to have plots of data to get a first impression, one should never draw final conclusions about causal relationships between different factors just by looking at graphs. That is why, in the next two exercises, we are going to do some quantitative and statistical analysis of our data. To move to *Exercise 1.2* you can click on the *Go to next exercise...*-button in the bottom left as a shortcut.
 
-info("Correlation does not imply causation!") # Run this line (Strg-Enter) to show info
+#< info "Correlation does not imply causation!"
+Just because two factors are highly correlated, that doesn't mean that there is a causal relationship between them. They could both be influenced by an unknown externality. If you want to see some examples for high correlations that clearly don't indicate a causal relationship, take a look at [Spurious Correlations](http://tylervigen.com/), a site that illustrates this problem in a rather entertaining way.
+#>
 
 *You can find the corresponding graphics and the associated discussions on pages 16f., 20 and 22 of the paper.*
 
@@ -170,9 +222,13 @@ To do that, we need the average of the first five years (1960-1964) and of the l
 
 Here is an example of how to use the function `filter()` from the package *dplyr* to isolate the data from the years 1960 to 1964. Click the *edit*-button to activate the code chunk and then proceed using the *check* button, as usual.
 
-info("filter() and dplyr") # Run this line (Strg-Enter) to show info
+#< info "filter() and dplyr"
+`filter()` expects two arguments: a data frame and one or more conditions with Boolean operators to filter that data frame by. For example, `filter(US.data, year > 1975)` provides a new data frame that contains all rows of `US.data` where the variable `year` is bigger than 1975.  
+The command `filter()` is part of the package *dplyr*, a collection of very useful tools to manipulate and work with data frames. We are going to use a variety of other functions from *dplyr* in this problem set as well.
+#>
 
 ```{r "1_2_a_example_1"}
+#< task
 # first, we load our data again
 US.data = read.table("usdata.csv")
 
@@ -181,17 +237,20 @@ library(dplyr)
 
 # then, we can apply the 'filter()'-function to our data frame:
 filter(US.data, year >= 1960 & year <= 1964)
+#>
 ```
 
 You can see that the `filter()`-command provided us with a new data frame that contains only the rows for the years 1960-1964. We can now access the columns that we want to analyse by using the syntax `data.frame$column.name`. Then we can calculate the average of the required variable by using the command `mean()`. In the next example, you can see how to combine these three functions to receive the aforementioned averages for the variable `topmtr`.
 
 ```{r "1_2_a_example_2"}
+#< task
 topmtr_start = mean(filter(US.data, year >= 1960 & year <= 1964)$topmtr)
 topmtr_end = mean(filter(US.data, year >= 2004)$topmtr)
 
 # To get an idea of the variables that we calculated, we show them:
 topmtr_start
 topmtr_end
+#>
 ```
 
 In this chunk we created two new variables. `topmtr_start` is the average of the top marginal tax rate in the US for the years 1960-1964. `topmtr_end` is the same for the years 2004-2008.
@@ -199,6 +258,7 @@ In this chunk we created two new variables. `topmtr_start` is the average of the
 Use the same commands and syntax to compute the average of `top1perc_nok` for the years 1960-1964 as `top1_start_n` and for the years 2004-2008 as `top1_end_n`. Then do the same for the variable `top1perc` and safe the results as `top1_start_k` and `top1_end_k`, respectively. 
 
 ```{r "1_2_a_1"}
+#< task
 # assign the averages of 'top1perc_nok' for 1960-1964 to 'top1_start_n' and
 # for 2004-2008 to 'top1_end_n'
 
@@ -207,10 +267,23 @@ Use the same commands and syntax to compute the average of `top1perc_nok` for th
 # 2004-2008 to 'top1_end_k'
 
 
+#>
 top1_start_n = mean(filter(US.data, year >= 1960 & year <= 1964)$top1perc_nok)
+#< hint
+display("Basically, you have to copy the second last line of code of the example above and replace the names of the variable you are creating and the column you want to access. Take a second look at the description of what you are supposed to do and which variable you need.")
+#>
 top1_end_n = mean(filter(US.data, year >= 2004)$top1perc_nok)
+#< hint
+display("Basically, you have to copy the last line of code of the example above and replace the names of the variable you are creating and the column you want to access. Take a second look at the description of what you are supposed to do and which variable you need.")
+#>
 top1_start_k = mean(filter(US.data, year >= 1960 & year <= 1964)$top1perc)
+#< hint
+display("Basically, you have to copy the second last line of the example code and substitute  the names of the variable you are creating and the column you want to access, just like you did in the first two lines of this excercise.")
+#>
 top1_end_k = mean(filter(US.data, year >= 2004)$top1perc)
+#< hint
+display("Basically, you have to copy the last line of the example code and substitute  the names of the variable you are creating and the column you want to access, just like you did in the first two lines of this excercise.")
+#>
 ```
 
 ### b) A first comparison
@@ -218,6 +291,7 @@ top1_end_k = mean(filter(US.data, year >= 2004)$top1perc)
 We now arrange the computed variables in the data frame `Comparison.data` and show it using the command `grid.table()` from the *gridExtra* package (the package that we have already utilized to arrange different plots):
 
 ```{r "1_2_b_example_1"}
+#< task
 # This code chunk creates a new data frame 'Comparison.data' which contains
 # three columns for the three different variables that we just summarized and
 # two rows for the two periods. Note that 'row.names = c(...)' can be used to
@@ -232,6 +306,7 @@ Comparison.data = data.frame("top_mtr" = c(topmtr_start, topmtr_end),
 # x digits after the comma. 'grid.table(data)' shows the data frame 'data' as
 # a table.
 grid.table(round(Comparison.data, digits=3))
+#>
 ```
 
 We see that the top marginal tax rate `top_mtr` dropped drastically from $85\%$ in the beginning of the 1960s to $35\%$ at the end of the last decade. During the same period, top 1 percent income shares excluding capital gains `top1_n` more than doubled from $8.2\%$ to $17.7\%$ and top 1 percent income shares including capital gains `top1_k` also increased strongly from $10.2\%$ to $21.8\%$. As did the plots we generated in *Exercise 1.1*, these numbers also indicate a strong negative correlation between top marginal tax rates and top incomes. We can use these numbers to calculate a first, very simple estimate for our overall elasticity $e$ of top incomes.
@@ -244,9 +319,43 @@ $$\dfrac{log(top~1~percent~income~end)~-~log(top~1~percent~income~start)}{log(1-
 
 Try to use this formula to calculate the estimated overall elasticity for the top 1 percent income share excluding capital gains as `e_estimate_n` and including capital gains as `e_estimate_k`. Note: the command to compute the natural logarithm is `log()`. Also, don't forget to use all the required brackets. If you happen to have problems solving this one, using the *hint*-button would be a very good idea. You might want to scroll up a little to remember the names of the variables that we created in the first two exercises that you have to use here.
 
-info("Why do we use 'log()' and '(1 - top MTR)'?") # Run this line (Strg-Enter) to show info
+#< info "Why do we use 'log()' and '(1 - top MTR)'?"
+If we use the rule
+
+$$log(x)~-~log(y)~=~log\bigg(\dfrac{x}{y}\bigg)$$
+
+we can transform
+
+$$\dfrac{log(top~1~percent~income~end)~-~log(top~1~percent~income~start)}{log(1-top~MTR~end)~-~log(1-top~MTR~start)}$$
+
+into
+
+$$\dfrac{log\bigg(\dfrac{top~1~percent~income~end}{top~1~percent~income~start}\bigg)}{log\bigg(\dfrac{1-top~MTR~end}{1-top~MTR~start}\bigg)}.$$
+
+If we denote $top~1~percent~income~start$ by $top~1~percent~income$ and $1-top~MTR~start$ by $1-r$ and use the rearrangements
+
+$$\dfrac{top~1~percent~income~end}{top~1~percent~income~start}=1+\dfrac{\Delta~top~1~percent~income}{top~1~percent~income}$$
+
+and
+
+$$\dfrac{1-top~MTR~end}{1-top~MTR~start}=1+\dfrac{\Delta~(1-r)}{(1-r)}$$
+
+we get
+
+$$\dfrac{log\bigg(1+\dfrac{\Delta~top~1~percent~income}{top~1~percent~income}\bigg)}{log\bigg(1+\dfrac{\Delta~(1-r)}{(1-r)}\bigg)}.$$
+
+Finally, if we utilize $log(1+x)\approx x$, for small x, we obtain
+
+$$\dfrac{\dfrac{\Delta~top~1~percent~income}{top~1~percent~income}}{\dfrac{\Delta~(1-r)}{(1-r)}}$$
+
+which is exactly our definition of $e$. This means that using logarithmic formulas helps us to estimate our overall elasticity for top incomes.  
+(We are also going to use this property in the next chapter for our linear regressions.)
+
+In addition, we use $(1-top~MTR)$ because we are interested in the response of top incomes to the net-of-tax rate rather than to the top marginal tax rate.
+#>
 
 ```{r "1_2_c_1"}
+#< task
 # assign e_estimate_n
 
 # assign e_stimate_k
@@ -255,10 +364,17 @@ info("Why do we use 'log()' and '(1 - top MTR)'?") # Run this line (Strg-Enter) 
 
 # show e_stimate_k
 
+#>
 e_estimate_n = (log(top1_end_n) - log(top1_start_n)) /
                (log(1 - topmtr_end) - log(1 - topmtr_start))
+#< hint
+display("Ok, here is the solution for the first line: e_estimate_n = (log(top1_end_n) - log(top1_start_n)) / (log(1 - topmtr_end) - log(1 - topmtr_start))")
+#>
 e_estimate_k = (log(top1_end_k) - log(top1_start_k)) /
                (log(1 - topmtr_end) - log(1 - topmtr_start))
+#< hint
+display("All you have to do is take the first line and replace 'e_estimate_n' with 'e_estimate_k'")
+#>
 e_estimate_n
 e_estimate_k
 ```
@@ -268,6 +384,7 @@ For both income including and income excluding capital gains, the estimated elas
 Now it's time for you to answer a first short question. Fill in your answer in place of "???" and remove the comment in the corresponding line.
 
 ```{r "1_2_c_2"}
+#< task
 # Question: If the tax-avoidance elasticity component e2 was a substantial
 # fraction of the overall elasticity e, would responses for income including
 # capital gains be substantially...
@@ -277,13 +394,21 @@ Now it's time for you to answer a first short question. Fill in your answer in p
 # ordinary income)
 #
 # answer = "???" # Assign "a" or "b" to 'answer' and remove the comment
+#> task
 
 answer = "a"
+#< hint
+display("Admittedly, this question can be rather difficult to wrap one's head around. The answer is 'a'. To find out why, click on the *info* button below.")
+#>
 ```
 
 You can click on the following *info* box to read an explanation of the answer to this quiz.
 
-info("Tax-avoidance responses") # Run this line (Strg-Enter) to show info
+#< info "Tax-avoidance responses"
+Let's consider a situation with no tax-avoidance responses. If top MTR on ordinary income $r$ increases, ordinary income decreases according to the overall elasticity $e$. And as there is no tax avoidance response, capital gains also decrease (as they are also dependent on productivity and bargaining). This means that ordinary income decreases by virtually the same rate as income including capital gains.
+
+Now consider a situation with strong tax avoidance. If top MTR on ordinary income increases, again, ordinary income decreases according to $e$. But as there is a strong tax avoidance response, a substantial part of this missing income is shifted to income that is tax-favoured, i.e. capital gains. So a resulting increase in capital gains offsets parts of the decrease in ordinary income. And that means that ordinary income decreases by a higher rate than income including capital gains. (And this translates into a higher $e$ for income excluding capital gains than for income including capital gains.)
+#>
 
 Of course, the number we calculated is a very vague estimate, so in the ensuing exercises, we are going to try to produce some more reliable figures.
 
@@ -302,27 +427,39 @@ $$log(top~1~percent~income~share)~=~\alpha~+~e~\cdot ~log(1~-~top~MTR)~+~\epsilo
 
 This example shows you how to fit this regression on top income share excluding capital gains using the command `lm()`:
 
-info("The linear regression model and 'lm()'") # Run this line (Strg-Enter) to show info
+#< info "The linear regression model and 'lm()'"
+In a linear regression model, we assume that a dependent variable (or regressand) is linearly related to several explanatory variables (or regressors). In a standard model it is also assumed that the standard deviation of the error term $\epsilon$ is constant and does not depend on the value of the regressors. The most basic technique to obtain estimates for the unknown parameters that describe the relation between regressors and the regressand (in our case $e$) is the Ordinary Least Squares (OLS) method. The method of OLS minimizes the sum of squared residuals which means it tries to minimize differences between the observations and the predictions of the model. (cf. Hayashi (2000))
+
+In *R*, the command `lm()` can be used to fit linear models. As default, it uses OLS. The syntax needed is `lm(formula, data, ...)`. For example, if you want to fit a model of the linear relationship between columns `a` and `b` and a column `c` in a data set `data` you use `lm(c ~ a + b, data)`. You can assign lm-objects to variables and you can get a more detailed description of your linear model using `summary(lm(...))`.
+#>
 
 ```{r "1_3_a_example_1"}
+#< task
 # First, we load our data again:
 US.data = read.table("usdata.csv")
 
 # Then, we do our first linear regression:
 US.reg1 = lm(log(top1perc_nok) ~ log(1 - topmtr), data = US.data)
+#>
 ```
 
 Try to do the same regression on top income share including capital gains `top1perc` and assign it to the variable `US.reg2`.
 
 ```{r "1_3_a_1"}
 US.reg2 = lm(log(top1perc) ~ log(1 - topmtr), data = US.data)
+#< hint
+display("You basically have to do the same as we did to get 'US.reg1', you just need to use another dependant variable.")
+#>
 ```
 
 Now we can look at the two regressions utilizing the command `showreg()` from the package 'regtools':
 
-info("'showreg()' and the package 'regtools'") # Run this line (Strg-Enter) to show info
+#< info "'showreg()' and the package 'regtools'"
+The package *regtools* provides tools to present regression results both in R and as Latex or HTML output. It combines the functionality of a couple of packages when dealing with regressions. We are going to use the included function `showreg()` to obtain a more expressive and elegant presentation for our regressions than the standard `summary(lm())` command offers. You are going to learn about various options this function provides in several examples and exercises.
+#>
 
 ```{r "1_3_a_example_2"}
+#< task
 # load the required package from the library:
 library(regtools)
 
@@ -331,6 +468,7 @@ library(regtools)
 showreg(list(US.reg1, US.reg2), 
         custom.model.names = c("capital gains excluded",
                                "capital gains included"))
+#>
 ```
 
 We find the estimator for $e$ in our regression in the line *log(1 - topmtr)*. The value in brackets underneath is the calculated standard deviation of our estimator. The stars behind represent the significance level of our estimator. The three stars for *log(1 - topmtr)* in the first column mean that if the true value of $e$ was zero then the probability of estimating a coefficient of $0.25$ or higher would be below $0.1\%$. (The higher the estimate for a coefficient is compared to its standard deviation, the more significant is the influence of the regressor on the regressand.)  
@@ -340,21 +478,35 @@ As a next step, we want to include a time trend in our regression in order to te
 
 $$log(top~1~percent~income~share)~=~\alpha~+~e~\cdot ~log(1~-~top~MTR)~+~c~\cdot ~time~+~\epsilon$$
 
-info("Controlling for a variable") # Run this line (Strg-Enter) to show info
+#< info "Controlling for a variable"
+Controlling for a variable, in our case the variable *time* (or, to be precise, `year`), means to separate out the effect of an independent variable from the effects of the other variables on the regressand (cf. Lewis-Beck et al. (2003)). To implement this in a regression you have to add this particular independent variable to the regressors.
+#>
 
 To implement this regression, you can copy the code we used to get `US.reg1` and `US.reg2`. Then add the variable `year` to the regressors using the concatenator `+`. Safe these new time-trend-including regressions as `US.reg3` for the variable `top1perc_nok` and `US.reg4` for the variable `top1perc`. Then use `showreg()` to show the results. Adopt the manual model names from the last example.
 
 ```{r "1_3_a_2"}
 US.reg3 = lm(log(top1perc_nok) ~ log(1 - topmtr) + year, data = US.data)
+#< hint
+display("Take the regression we used for 'US.reg1' and add the additional variable 'year' using the pattern 'lm(... ~ ... + new variable, ...)'.")
+#>
 US.reg4 = lm(log(top1perc) ~ log(1 - topmtr) + year, data = US.data)
 showreg(list(US.reg3, US.reg4), 
         custom.model.names = c("capital gains excluded", 
                                "capital gains included"))
+#< hint
+display("Copy the 'showreg()'-command from the example and change the list of the regression models to 'US.reg3, US.reg4'.")
+#>
 ```
 
 Again, we receive a significant positive elasticity with around $0.3$. Again, with no notable difference between the two income shares. Our results are therefore robust to including a time trend. Piketty et al. conclude that this means that there is presumably a strong link between top marginal tax rates and top 1 percent shares and that tax avoidance effects (expressed through $e_2$) tend to be small, just as we expected when looking at the summarizing plots from *Exercise 1.1*. 
 
-info("Further insights") # Run this line (Strg-Enter) to show info
+#< info "Further insights"
+* You might have already noticed that the elasticities we get from our regressions are lower than the ones we got from our simple estimations from *Exercise 1.2*. Piketty et al. explain this with the fact that before the 1970s the average marginal tax rate for the top 1 percent was smaller than the statutory tax top rate that we consider. That means that an increase or a decrease in top MTR didn't actually affect the whole top 1 percent which leads to an underestimation of the overall elasticity $e$.
+
+* Our estimation of $e_2$ might be biased downward if tax avoidance opportunities would have declined throughout our time span. However, as it is explained in the paper, it seems more likely that the exact opposite has happened with an increasing availability of, for example, offshore accounts and fringe benefits.
+
+* Note that Piketty et al. do find strong evidence for large tax-avoidance responses in the short run. But their analysis leads them to state that in the long run the tax-avoidance elasticity "appears to be small (say, $e_2<0.1$)".
+#>
    
 ### b) Effect of top MTR on income growth
 
@@ -369,23 +521,33 @@ $$log(income)~=~\alpha~+~e~\cdot ~log(1~-~top~MTR)~+~c~\cdot ~time~+~\epsilon$$
 The regressions for `incadulttop1_nok` and `incadultbot99_nok` are already given, you only have to assign the regression for `incadult_nok` to the variable `US.reg7`. It's not a big challenge, but the standard `lm()` regression is a powerful tool which you can't practice using enough.
 
 ```{r "1_3_b_1"}
+#< task
 US.reg5 = lm(log(incadulttop1_nok) ~ log(1 - topmtr) + year, data = US.data)
 US.reg6 = lm(log(incadultbot99_nok) ~ log(1 - topmtr) + year, data = US.data)
 
 # Do the last one for 'incadult_nok':
 
+#>
 US.reg7 = lm(log(incadult_nok) ~ log(1 - topmtr) + year, data = US.data)
 ```
 
 So far, we have only used the standard linear regression which uses the assumption that the variance of the error term is constant (known as homoscedasticity). This might not be true and might simulate significance of results that are not significant. In their paper, for their regressions on the US data Piketty et al. use a more robust version, a Newey-West regression with 8 lags, to be exact. This type of regression is put into use to deal with autocorrelation and heteroskedasticity. To find out more, click the *info*-button below.
 
-info("Newey West") # Run this line (Strg-Enter) to show info
+#< info "Newey West"
+Besides dealing with heteroskedasticity (the opposite of homoscedasticity), in our data we might also face the problem of autocorrelation. We speak of autocorrelation if the data in a time series is influenced by its own historical values. In our data it is very compelling to expect this phenomenon as top 1 percent income share in one year probably influences top 1 percent income share in the next year.
+
+To consider these two things in our regression model we are going to use the Newey-West estimator for the standard deviations. This estimator was first introduced by Newey and West (1987). As this estimator checks for both heteroskedasticity and autocorrelation, you'll find that the estimated standard deviations increase.
+#>
 
 To apply standard errors from Newey West, we utilize the possibility to pass `showreg()` a list of covariance matrices. To get these matrices, we use the function `NeweyWest()` from the *sandwich* package. Take a look at the code in the following example to comprehend it, then click the *check*-button as usual.
 
-info("'NeweyWest()' and the 'sandwich' package") # Run this line (Strg-Enter) to show info
+#< info "'NeweyWest()' and the 'sandwich' package"
+The *sandwich* package serves to provide different estimators that are heteroskedasticity-consistent (HC) and heteroskedasticity and autocorrelation consistent (HAC).  
+One of these HAC estimators is the Newey West estimator. We can obtain the according covariance matrix using the function `NeweyWest(x, ...)` where `x` is a fitted model object. In our case, to obtain the estimator as described by Newey and West (1987) we set the argument `prewhite` to FALSE and to consider autocorrelation up to eight years back we set the argument `lag` to 8.
+#>
 
 ```{r "1_3_b_example"}
+#< task
 # load the required package from the library:
 library(sandwich)
 
@@ -407,6 +569,7 @@ showreg(reg.list , custom.model.names = c("Top 1 percent real income",
                                           "Average real income"),
         digits = 3, vcov.li = cov.list, include.adjrs = FALSE,
         include.rsquared = FALSE)
+#>
 ```
 
 The results confirm our finding from exercise *a)* that top 1 percent income is strongly positively linked to the top net-of-tax rate. $e$ is highly significant. In addition, bottom 99 percent income is significantly (at the 5% level) negatively related to the top net-of-tax rate. Piketty et al. argue that this suggests that increases in top incomes come at the expense of bottom incomes (an effect called "trickle up"), indicating a high $e_3$. Average incomes are not significantly linked to top net-of-tax rates, implying that the supply-side response of top earners to changes in top marginal tax rates $e_1$ makes up only a small portion of the overall response $e$ (if top earners responded to raises in top net-of-tax rates primarily by increasing productivity, then that should have a positive influence on GDP). 
@@ -414,6 +577,7 @@ The results confirm our finding from exercise *a)* that top 1 percent income is 
 At the end of this exercise, let us do a little quiz. Remember, you just need to replace the "???"s with the right answers.
 
 ```{r "1_3_b_2"}
+#< task
 # Question 1: Considering the implications that Piketty et al. detect in their
 # analysis so far, which one of the three elasticities seems to be the biggest
 # in the US:
@@ -429,6 +593,7 @@ At the end of this exercise, let us do a little quiz. Remember, you just need to
 # Question 3: Can we be sure yet, that our preliminary conclusions reflect
 # reality?
 # answer3 = "???" # Assign "yes" or "no" to answer3 and remove the comment 
+#> task
 
 answer1 = "c"
 answer2 = "no"
@@ -437,7 +602,13 @@ answer3 = "no"
 
 For more information, especially on *question 3* of our little quiz, click the *info*-section below.
 
-info("Reverse causality and external effects") # Run this line (Strg-Enter) to show info
+#< info "Reverse causality and external effects"
+While we could already draw some conclusions about the dimension and the composition of the elasticity $e$ of top incomes, we still face a couple of problems that prevent us from passing our definite verdict on optimal top tax rates:
+
+* So far, we have assumed that the link between top net-of-tax rates and top income shares is causal. But there is a chance that we face reverse causality, meaning that, actually, top income shares influence top net-of-tax rates. This might be the case if higher income empowers the top 1 percent to influence policy via lobbying or funding of campaigns in order to lower the top marginal tax rate.
+
+* Slower GDP growth coincides with an increase in top net-of-tax rate. This slower economic growth could very well be unrelated to cuts in top MTR and influenced by an external effect. This could lead to an overestimation of compensation-bargaining elasticity $e_3$ and an underestimation of supply-side elasticity $e_1$ as positive effects of a higher top 1 percent productivity could be shrouded by and the decline in bottom 99 percent income growth could be due to diminished GDP growth. (This is a rather compelling argument as growth did slow down in a lot of OECD countries since the 1970s.)
+#>
 
 Besides the problems that you can read about in the *info* section above, keep in mind that so far, we only have analysed data from the US. If we want to obtain universal insights into top income elasticities and optimal top tax rates we have to look at further evidence. 
 
@@ -451,16 +622,21 @@ After we have taken a look at data just from the US in *Exercise 1*, we are next
 
 First, we need to upload the new data *intdata.dta* which should also be saved in the directory of your problem set. This time, the data is stored in the *.dta*-format which is used to store data by the statistical software *Stata*. To load a *.dta* file we have to use the command `read.dta()` from the package *foreign*. This command is used with the same syntax as `read.table()`.
 
-info("'read.dta()' and the foreign package") # Run this line (Strg-Enter) to show info
+#< info "'read.dta()' and the foreign package"
+The package *foreign* was built to enable the user to upload data that was stored by one of several statistical analysis software (for example, *SPSS* and *Stata*). It also contains functions that allow you to save data in the file format of the mentioned programs.  
+In their paper, Piketty et al. analyse their data using the very popular statistical software package *Stata*. That is why their data is provided in the *.dta*-format that is used by *Stata* to store data. If you want to upload such a file into your *R* environment, you have to use the command `read.dta()` which is used with the same syntax as the `read.table()` command that we introduced in the very first exercise: `read.dta("tablename")`.
+#>
 
 Try to upload the file *intdata.dta* into your work space using the syntax `read.dta("filename")` and assign it to the variable `Int.data`.
 
 ```{r "2_1_a_1"}
+#< task
 # First, we have to load the required package
 library(foreign)
 
 # Then, upload the data:
 
+#>
 Int.data = read.dta("intdata.dta")
 ```
 
@@ -468,9 +644,13 @@ This data set contains the three macroeconomic values marginal tax rates for top
 
 To get a first overview of how top marginal tax rates influenced top 1 percent income shares in the different countries we are going to use a motion plot that is provided by the package *googleVis* that allows you to create a lot of different Google plots. This package is a great tool set to illustrate your data which is definitely worth exploring. As a start, you can try to comprehend the code in the next example chunk.
 
-info("googleVis") # Run this line (Strg-Enter) to show info
+#< info "googleVis"
+The *googleVis* package offers the possibility to visualize *R* data frames with interactive Google Charts. The output of a *googleVis* function is html code which can be opened in a new window in your browser or embedded into existing html documents and websites. It is a great tool to dive into data and in many cases by far exceeds the possibilities of visualization of information that more common ways to plot provide.  
+We are going to use maybe the most popular kind of Google chart: The Motion Chart. To do so, we utilize the function `gvisMotionChart()`. To get an idea of how this function works, take a look at the example below.
+#>
 
 ```{r "2_1_a_example", results = 'asis'}
+#< task
 # First, we load the needed package
 library(googleVis)
 
@@ -488,6 +668,7 @@ mp = gvisMotionChart(subset(Int.data, year <= 2005), idvar = "country",
 
 # Finally, we simply plot the motion chart
 plot(mp, tag = "chart")
+#>
 ```
 
 Each bubble in the graph depicts one country and its relationship between top MTR and top 1 percent income share. If you click the play-button in the bottom left, you can see how that relationship developed over time for the different countries.
@@ -496,6 +677,7 @@ You can play around a little bit with the graph. For example, click on different
 Now, deploying the motion chart, we want to do a little quiz:
 
 ```{r "2_1_a_2"}
+#< task
 # Question 1: If you take a look at the year 1960, can you see a strong
 # relation between top MTR and top 1 percent income?
 # answer1 = "???" # Assign "yes" or "no" to 'answer1' and remove the comment
@@ -511,10 +693,20 @@ Now, deploying the motion chart, we want to do a little quiz:
 # a) Canada
 # b) Japan
 # answer3 = "???" # Assign "a" or "b" to 'answer3' and remove the comment
+#>
 
 answer1 = "no"
+#< hint
+display("Think about if you could put a straight onto the bubbles in the the graph that clearly explains the relation between the two variables.")
+#> 
 answer2 = "yes"
+#< hint
+display("Think about if you could put a straight onto the bubbles in the the graph that clearly explains the relation between the two variables.")
+#> 
 answer3 = "a"
+#< hint
+display("In which country did a decrease in top MTR by approximately the same amount lead to a bigger increase in top 1 percent income share?")
+#>
 ```
   
   
@@ -529,12 +721,17 @@ So far, today the relationship between top net-of-tax rate and top income share 
 
 $$log(top~1~percent~income~share)~=~\alpha~+~e~\cdot ~log(1~-~top~MTR)~+~b~\cdot ~country~+~\epsilon$$
 
-info("Country fixed effects") # Run this line (Strg-Enter) to show info
+#< info "Country fixed effects"
+To include country fixed effects in a regression means to control for the influence the variable *country* has on our dependent variable. Fixed effects, in contrast to random effects, describe a situation were we have data from all manifestations of a variable that are of interest. This is true for the variable *country* in our case as we have data for all 18 countries that we are interested in. Opposite to testing for the variable *time*, this leads to as many new coefficients as there are individuals in the data. In our case, this means that we get 18 new estimators for the fixed effect of each country. Naturally, each estimator equals zero for 17 countries and an estimated value for one of them.
+#>
 
 Implement this regression on our data set `Int.data` using the `lm()` command, just as you did in *Exercise 1.3*. Note that you can add the variable `country` to the regressors the same way as you did with the variable `year`. Top net-of-tax rate can be obtained using `(1 - mtr)`. Save the regression as `Int.reg1`.
 
 ```{r "2_1_b_1"}
 Int.reg1 = lm(log(top1) ~ log(1 - mtr) + country, data = Int.data)
+#< hint
+display("Maybe a look at 'Exercise 1.3' will refresh your memory. And don't forget to include the variable 'country'.")
+#>
 ```
 
 In the motion chart we were able to observe that the strength of the correlation between top net-of-tax rates and top income shares increased over time. That's why we want to do the exact same regression we have just done for the two time spans until 1980 and from 1981. To do that, use the `filter()`-command to pass `lm` the correct data and save the regression for the first period as `Int.reg2` and for the second period as `Int.reg3`.
@@ -542,28 +739,42 @@ In the motion chart we were able to observe that the strength of the correlation
 ```{r "2_1_b_2"}
 Int.reg2 = lm(log(top1) ~ log(1 - mtr) + country,
               data = filter(Int.data, year <= 1980))
+#< hint
+display("You can copy the code from the last code chunk, change the name of the variable you assign your regression to and change the data input using the syntax 'data = filter(Int.data, ...)' and the right condition for the variable 'year'. Remember that you want to use the data for all years until 1980.")
+#>
 Int.reg3 = lm(log(top1) ~ log(1 - mtr) + country,
               data = filter(Int.data, year >= 1981))
+#< hint
+display("For 'Int.reg3' you can use the same code as for 'Int.reg2'. Just change the condition for 'filter' so that you use the data for all years since 1981.")
+#>
 ```
 
 Let's take a look at the results from our three regressions. Remember how we used Newey West standard errors in *Exercise 1.3*? This time we are going to use another type of standard errors that is very often used to obtain a robust regression by utilizing a standard function of the `showreg()` command.
 
-info("Using standard robust errors with 'showreg()' - HC1 as an example") # Run this line (Strg-Enter) to show info
+#< info "Using standard robust errors with 'showreg()' - HC1 as an example"
+You don't necessarily have to pass `showreg()` a covariance matrix (as we did for the Newey West) to get a robust regression. If you set the `robust` argument to TRUE you can choose between various different types of robust standard errors. For this purpose, you can set the argument `robust.type` to one of the following values: "HAC", "cluster", "HC1", "HC2", HC3", "HC4" or "NeweyWest".
+
+We are going to use "HC1", which describes a simple degrees of freedom correction as defined by MacKinnon and White (1985). This type of standard errors is often used to get a robust regression, for example, as a standard in *stata*.
+#>
 
 ```{r "2_1_b_example"}
+#< task
 # We set 'robust = TRUE' and 'robust.type = "HC1"' to obtain robust standard
 # errors. Further, we use 'omit.coef = "country"' to leave out all 18 lines
 # with the word 'country'.
 showreg(list(Int.reg1, Int.reg2, Int.reg3), 
         custom.model.names = c("1960-2010", "1960-1980", "1981-2010"), 
         digits = 3, robust = TRUE, robust.type = "HC1", omit.coef = "country")
+#>
 ```
 
 We notice that the estimated elasticity was very low and insignificant during the first period from 1960 to 1980 and very high at around $0.6$ in the period from 1981 to 2010. This suggests different behavioural responses due to institutional changes, as do the differences between countries. If you look at the whole period from 1960 to 2010 you obtain an estimated elasticity of about $0.3$. For both the whole time span and the later phase, elasticities are highly significant.
 
 This means, that for the past decades our international evidence is consistent with our US evidence. This strongly implies that there is in fact a strong positive correlation between top net-of-tax rates and top 1 percent income shares. Hence, the overall elasticity $e$ can be, especially for the recent past, estimated at a high level of about $0.5$, as Piketty et al. do in their paper.
 
-info("Differences between countries") # Run this line (Strg-Enter) to show info
+#< info "Differences between countries"
+We could already infer from our plot that there are significant differences in elasticity across countries, implying that the institutional set-up influences the top income elasticity of a country. Piketty et al. give a few examples for this phenomenon: While overall the elasticity for the whole period can be estimated at around $0.3$, in English-speaking countries, especially in the US and the UK, elasticity is around $0.5$ and in countries such as Japan or Sweden it is close to zero.
+#>
 
 *This partial exercise is based on pages 3 and 22-26 of the paper.*
 
@@ -581,6 +792,7 @@ The next example shows you how we can use these functions to create the data fra
 Of course, as there are a lot of new functions in this code chunk simultaneously, it might be a little hard to understand how the single commands work. But this example is primarily designed to give you an impression of what is possible to accomplish with the *dplyr* package. Just try to comprehend it as good as you can, using the descriptions given above.
 
 ```{r "2_2_a_example_1"}
+#< task
 # Again, we upload our data:
 Int.data = read.dta("intdata.dta")
 
@@ -589,6 +801,7 @@ Int_growth.data = do(group_by(Int.data, country),
                      data.frame(dmtr_perc = 100 * (last(.$mtr) - first(.$mtr)),
                                 gdp_growth = 100 * ((last(.$gdpcap) /
                                           first(.$gdpcap))^(1 / 50) - 1)))
+#>
 ```
 
 Use the *data*-button to take a look at `Int_growth.data`. You can see that it has three columns and 18 rows, containing the overall change in top MTR and average annual GDP growth for each country.
@@ -598,11 +811,15 @@ Now, let's see if you still remember the things that we've learned in *Exercise 
 ```{r "2_2_a"}
 p1 = ggplot(Int_growth.data) + geom_point(aes(dmtr_perc, gdp_growth),
                                           colour = "blue", size = 3.5)
+#< add_to_hint
+display("If you experience problems with this exercise a look at the first two examples from 'Exercise 1.1' might help. Don't forget to set the colour to blue and to use 'size = 3.5' to obtain the right size.")
+#>
 ```
 
 Before we plot `p1` we are going to add expressive labels to our plot. In addition, we are going to use the theme that is used by the weekly newspaper "The Economist" for their plots. This function is provided by the package *ggthemes*. (Again, this example is intended rather as a stimulus than for you to completely internalize.)
 
 ```{r "2_2_a_example_2"}
+#< task
 # First, we add a title, and a label for both the x- and the y-axis:
 p1 = p1 + ggtitle("Growth and change in top marginal tax rate (1960 - 2010)") +
           xlab("Change in top marginal tax rate (points)") +
@@ -624,6 +841,7 @@ p1 = p1 + theme_economist()
 
 # Finally, show the plot:
 p1
+#>
 ```
 
 If we look at the plot, there is no significant correlation visible between cuts in top tax rates and economic growth. (This also holds true for the sub periods, as Piketty et al. show in the Appendix of their paper.) If a substantial part of the high responsiveness of top incomes to top tax rates would be due to supply-side responses, decreases in top tax rates should also lead to higher GDP growth. However, this is not the case in our data. This indicates a high compensation-bargaining elasticity $e_3$ and a low supply-side elasticity $e_1$. This is especially true if we assume that the influence of tax avoidance responses, and therefore $e_2$, is small as we have found in our US evidence.
@@ -638,11 +856,14 @@ $$~~~~~~~~~~~~~~~d~\cdot ~time\cdot initial~GDP~per~capita~+~\epsilon$$
 As you can see, not only do we implement a time trend and country fixed effects, we also include the interaction of initial GDP
 per capita with a time trend. This incorporates the catch-up effect initial GDP might have on GDP growth for poor countries.
 
-info("Growth Theory") # Run this line (Strg-Enter) to show info
+#< info "Growth Theory"
+For our plot above, we used simple average real GDP growth. In most growth theories, it is suggested that poorer countries can profit from a catch-up effect and tend to grow faster than rich countries do, for example due to diminishing returns of deployed capital. (An idea that was pioneered in a large part by the work of Sollow (1956).) This effect could have distorted our plot and, as a consequence, our conclusions. That's why we are testing for the influence of initial GDP on GDP growth in the regression at hand.
+#>
 
 The next example demonstrates how to use the command `mutate()` from the *dplyr* package to get the logarithm of GDP per capita for the first year for each country. First, we group `Int.data` by the variable `country` using the `group_by()` function. Then, we pass this data frame to `mutate()` as a first argument and determine in the second argument what should be done with each group: We want to compute the logarithm of the first entry for `gdpcap` for each country, which we manage by using the function `first()`, and assign it to `ln_gdp_start`. The `mutate()` function creates a new data frame, containing the old data and the additional column `ln_gdp_start` which we save as `Int.data`. Last, we calculate the mean of the logarithm of the GDP in 1960 for the 18 different countries and assign it to `ln_gdp_start_avg`.
 
 ```{r "2_2_b_example_1"}
+#< task
 # Use mutate to add the new column 'ln_gdp_start' to the data frame
 # 'Int.data':
 Int.data = mutate(group_by(Int.data, country),
@@ -653,6 +874,7 @@ ln_gdp_start_avg = mean(Int.data$ln_gdp_start)
 
 # show the variable:
 ln_gdp_start_avg
+#>
 ```
 
 Now it's your turn, again. Use `mutate()` to add a column to Int.data with the name `gdp_start_year` which depicts the product of `(ln_gdp_start - ln_gdp_start_avg)` and `(year - 1960)`. Note that you have to group the data by country, again.
@@ -661,6 +883,9 @@ Now it's your turn, again. Use `mutate()` to add a column to Int.data with the n
 Int.data = mutate(group_by(Int.data, country), 
                   gdp_start_year = (ln_gdp_start - ln_gdp_start_avg) *
                                    (year - 1960))
+#< hint
+display("Ok, this one can be rather hard, so here is the solution: Int.data = mutate(group_by(Int.data, country), gdp_start_year = (ln_gdp_start - ln_gdp_start_avg)  * (year - 1960)). But make sure to comprehend the code, as 'mutate' is, as many other functions from 'dplyr', a very useful tool to manipulate data.")
+#>
 ```
 
 The purpose of the variable `gdp_start_year` is to test for the influence initial GDP has on GDP growth. It is negative if initial GDP is below average and vice versa. (Again, the use of the *Data Explorer* can be useful.)
@@ -668,6 +893,7 @@ The purpose of the variable `gdp_start_year` is to test for the influence initia
 Now we can do the regression that we looked at above. We use the same robust standard errors as we did in *Exercise 2.1*. Besides implementing a couple of arguments of `showreg()` to make the result optically more appealing, this time we are going to use the html-output of `showreg()`. All we have to do is set the argument `output` to "html".
 
 ```{r "2_2_b_example_2", results = 'asis'}
+#< task_notest
 # First, we do the regression, also using the new variable we created:
 Int.reg2 = lm(log(gdpcap) ~ log(1 - mtr) + year + country + gdp_start_year,
               data = Int.data)
@@ -684,6 +910,7 @@ showreg(list(Int.reg2), custom.model.names = c("1960-2010"), digits = 3,
         custom.coef.names =
          c(NA, "(1 - r)", "time trend", rep(NA, 17), "time x initial GDP"),
         output="html")
+#>
 ```
 
 We can see that the effect of top net-of-tax rates $\beta$ is slightly negative, but it's not significant. That is why, in their paper, Piketty et al. "conservatively conclude that low top tax rates do not have any detectable positive impact on GDP per capita".  
@@ -696,11 +923,23 @@ However, we still face the possibility that deviations of GDP growth from its tr
 
 Note: Piketty et al. also use this type of regression to get a simple estimate of the different elasticities which will also influence our calculations of the optimal marginal top tax rate $r^*$. To find out how this can be done, take a look at the *info* section below.
 
-info("Estimations of elasticities") # Run this line (Strg-Enter) to show info
+#< info "Estimations of elasticities"
+If we do the last regression on the later period from 1981 to 2010 we obtain a $\beta$ of $0.008$. If we then assume that the top 1 percent income share $\pi$ at the beginning equals $0.1$ this can be translated into $e_1=0.08$ because in the supply-side model we have $\beta=\pi\cdot e_1$. If we assumed that there are unrecorded tax avoidance effects we would have $e_1+e_2=0.08$. Of course, the standard error around this estimate is large but even if we assumed that $e_1+e_2$ was twice as high it would still make up less than $40\%$ of our estimated elasticity $e=0.5$. This leads to a compensation-bargaining elasticity $e_3$ of at least $0.3$.
+#>
 
 *In their paper, Piketty et al. go on to analyse microeconomic evidence from both the US and OECD countries. They rule out some problems and counter arguments and consolidate the findings that we had. We will not further devote ourselves to the analysis of that data. However, you can find a short summary of their analysis in the info-box below.*
 
-info("Microeconomic evidence") # Run this line (Strg-Enter) to show info
+#< info "Microeconomic evidence"
+While we focus on macroeconomic evidence in this problem set, Piketty et al. also consider empirical micro-level evidence from CEO pay "to directly investigate whether CEO pay responds to top tax rates and whether this response is due to bargaining effects rather than productive effort".
+
+First, they look at data of CEO pay and firm performance from the US for the period from 1970 to 2010. They consider a model by Bertrand and Mullainathan (2001) that describes how CEO pay depends on luck and performance and test whether rewards for luck are higher when top tax rates are lower. They find strong evidence of pay for luck and that pay for luck has been stronger in the low tax period after 1986 than in the high tax period before 1987. Combined with their finding that workers' wages do not show any pay for luck, this is consistent with the bargaining model where a high top income elasticity is due to a high compensation-bargaining elasticity.
+
+Then, they go on to analyse a dataset that combines detailed information on CEO pay from 14 countries in 2006, information on stock ownership, firm performance and firm governance. They find a strong, negative correlation between total pay and top tax rates across countries. This relation stays almost the same when controlling for firm performance, implying that nearly none of the effect of taxes on pay is due to changes in productivity. In well-governed firms, the effect of top net-of-tax rates on CEO pay is smaller which is also consistent with the bargaining model, as well-governed firms should be more able to control rent-seeking channels. Finally, they find that the elasticity for bonuses and equity is extremely large while for salaries it is rather small.
+
+In conclusion, their additional results from microeconomic evidence support the compensation-bargaining hypothesis and are consistent with their findings from the macroeconomic evidence that we have reproduced.
+
+*You can find the analysis of microeconomic evidence on pages 29-37 of the paper.*
+#>
 
 After we have analysed empirical evidence, in the next exercise we are going to take a look at an economic model with which we are going to try to describe our findings. This will help us to derive possible optimal top tax rates and policy implications.
 
@@ -717,7 +956,9 @@ Further derivations and information are given in several *info*-sections.
 We denote by $z$ taxable earnings and by $T(z)$ the non-linear tax schedule. Our top marginal tax rate above a given threshold $\bar{z}$ is still $r$.
 The government maximizes the social welfare function $W=\int G(u_i)~dv(i)$, where $G()$ is increasing concave, $u_i$ is the utility of individual $i$ and $dv(i)$ is the density mass of people of individuals of type $i$. We assume that the average social marginal welfare weight for top bracket income earners is zero. This means that the government sets top MTR $r$ to maximize tax revenues among top incomes.
 
-info("Welfare weight zero") # Run this line (Strg-Enter) to show info
+#< info "Welfare weight zero"
+The social marginal welfare weight on individual $i$ is defined as $g_i = G'(u_i)u_{ci} / p$. For top bracket income earners, we assume that this is on average zero. This allows us to obtain an upper bound on the optimal top tax rate. However, as we will discuss later, we can also integrate a positive social welfare weight $g$ on marginal consumption of top bracket earners.
+#>
 
 ### a) Deriving elasticities
 
@@ -743,11 +984,31 @@ describing the optimal bargaining effort $k_i'(\eta)$ in dependency of top MTR $
 * $d_i'(x)=r-t,$  
 describing the optimal income sheltering effort $d_i'(x)$ in dependency of the margin between top MTR $r$ and sheltered income tax $t$.
 
-info("Derivation 1") # Run this line (Strg-Enter) to show info
+#< info "Derivation 1"
+Inserting the formula for disposable after tax income $c$ into $u_i(c,y,x,\eta)$ and using $z=\eta y-x$ and $R=r\bar{z}-T(\bar{z})$, we get:
+
+$$u_i(y,x,\eta)=\eta y-r(\eta y-x)-tx+r\bar{z}-T(\bar{z})-h_i(y)-d_i(x)-k_i(\eta)$$
+
+Differentiating $u_i(y,x,\eta)$ with respect to real income $y$ and setting to zero, we obtain:
+
+$$\dfrac{\partial u_i}{\partial y}=\eta-r\eta-h_i'(y)\overset{!}{=}0$$
+$$\Leftrightarrow h_i'(y)=\eta(1-r)$$
+
+Differentiating $u_i(y,x,\eta)$ with respect to fraction $\eta$ and setting to zero, we obtain:
+
+$$\dfrac{\partial u_i}{\partial \eta}=y-ry-k_i'(\eta)\overset{!}{=}0$$
+$$\Leftrightarrow k_i'(\eta)=y(1-r)$$
+
+Differentiating $u_i(y,x,\eta)$ with respect to sheltered income $x$ and setting to zero, we obtain:
+
+$$\dfrac{\partial u_i}{\partial x}=r-t-d_i'(x)\overset{!}{=}0$$
+$$\Leftrightarrow d_i'(x)=r-t$$
+#>
 
 Let's do a quiz to internalize these first findings.
 
 ```{r "3_1_a"}
+#< task
 # Question 1: How do the three different efforts react to an increase in r
 # (ceteris paribus)?
 # Assign each of the three variables which depict the three different efforts
@@ -763,11 +1024,24 @@ Let's do a quiz to internalize these first findings.
 # b) x = y
 # c) Can't say
 # answer = "???" # Assign "a", "b" or "c" to 'answer' and remove the comment
+#>
 
 h = "-"
+#< hint
+display("Take a look at the derivation of h(y) and remember that all effort functions are increasing and convex")
+#>
 k = "-"
+#< hint
+display("Take a look at the derivation of k and remember that all effort functions are increasing and convex")
+#>
 d = "+"
+#< hint
+display("Take a look at the derivation of d(x) and remember that all effort functions are increasing and convex")
+#>
 answer = "a"
+#< hint
+display("Here's the solution: If r = t, then d'(x) = 0. As d(x) is increasing and convex, this can only hold true for x = 0. This is intuitive, as there is no sense in sheltering if there are no tax benefits on sheltered money.")
+#>
 ```
 
 We can now also express the three elasticities that we used throughout this problem set so far in formulas:
@@ -780,15 +1054,50 @@ $$e_2=s_2\cdot e=\dfrac{\dfrac{dx}{z}}{\dfrac{d(r-t)}{1-r}}$$
 
 describes the **tax-avoidance elasticity**. It depicts by how much sheltered income changes in relation to reported taxable income if the margin between top MTR and tax on sheltered income changes in relation to the top net-of-tax rate. Piketty et al. define tax avoidance as "changes in reported income due to changes in the form of compensation but not in the total level of compensation". Tax avoidance depends vitally on the tax system and its opportunities for avoidance. In our model, $e_2$ makes up the fraction $s_2$ of $e$.
 
-info("Tax avoidance") # Run this line (Strg-Enter) to show info
+#< info "Tax avoidance"
+According to Stiglitz (1985), tax avoidance can be distinguished into three main categories (For which we are going to mention some examples named by Piketty et al. in their paper):
+
+* Postponement of taxes: An example can be reductions in current cash compensation for deferred compensation such as stock-options or future pensions
+
+* Tax arbitrage across individuals facing different tax brackets (or the same individual facing different marginal tax rates at different times): Tax induced transactions between individuals within a family, etc.
+
+* Tax arbitrage across income streams facing different tax treatment: Reducing cash compensation for fringe benefits, changes in the form of business organization such as shifting profits from the individual income tax base to the corporate tax base and re-characterization of ordinary income into tax favoured capital gains (Arguably the main channel for tax avoidance and the one that we concentrated on in *Exercise 1*)
+
+The fourth category that we include in our definition of tax avoidance is tax evasion such as using offshore accounts. As Slemrod & Yitzhaki (2002) put it, "the distinguishing characteristic of evasion is illegality".
+
+Tax-avoidance opportunities can either be pure creations of the tax system such as different taxation of different income forms or real enforcement constraints such as the problem of taxing profits from informal businesses. As we assume that the social welfare weight on top incomes equals zero, tax avoidance is harmful and the government aims to close tax-avoidance opportunities (A fact that we are also going to look at mathematically at the end of this page).
+#>
 
 $$e_3=s_3\cdot e=\dfrac{\dfrac{db}{z}}{\dfrac{d(1-r)}{1-r}}$$
 
 is the **compensation-bargaining elasticity**, or just bargaining elasticity. It describes by how much bargained earnings change in relation to reported taxable earnings if net-of-tax rate changes. Bargained earnings describe the difference between pay and marginal economic product. In our model, $e_3$ can be calculated as $e$ times the fraction $s_3$.
 
-info("Compensation bargaining") # Run this line (Strg-Enter) to show info
+#< info "Compensation bargaining"
+Pay of top earners may not be equal to marginal economic product due to their power to influence compensation committees. Compared to lower income earners, top earners generally have more opportunities to influence their pay (Especially when you think about executives in big companies). When net-of-tax rates decrease, top income earners have a higher incentive to positively influence their income. Bargaining of top income earners is harmful as the bargaining aggregate is zero and higher bargained incomes of top earners comes at the expense of lower incomes and because the government sets a higher welfare weight on lower incomes.  
+This so-called rent-seeking externality that bargaining creates will also be incorporated in the optimal tax that we are about to derive.
+#>
 
-info("Derivation 2") # Run this line (Strg-Enter) to show info
+#< info "Derivation 2"
+The fraction of the behavioural response of taxable income $z$ to top net-of-tax rate $1-r$ due to tax avoidance $s_2$ can be expressed as
+
+$$s_2=\dfrac{\dfrac{dx}{d(r-t)}}{\dfrac{dy}{d(1-r)}+\dfrac{db}{d(1-r)}+\dfrac{dx}{d(r-t)}}$$
+
+which can be, using $d(r-t)=-d(1-r)$ and $y+b-x=z$, transformed into
+
+$$\dfrac{\dfrac{dx}{d(r-t)}}{\dfrac{dz}{d(1-r)}}.$$
+
+Now, we can proof that $s_2\cdot e=e_2$ because
+
+$$s_2\cdot e=\dfrac{\dfrac{dx}{d(r-t)}}{\dfrac{dz}{d(1-r)}}\cdot \dfrac{\dfrac{dz}{z}}{\dfrac{d(1-r)}{1-r}}=\dfrac{\dfrac{dx}{z}}{\dfrac{d(r-t)}{1-r}}=e_2.$$
+
+The same can be shown for $s_3$ and $e_3$, as
+
+$$s_3=\dfrac{\dfrac{db}{d(1-r)}}{\dfrac{dy}{d(1-r)}+\dfrac{db}{d(1-r)}+\dfrac{dx}{d(r-t)}}=\dfrac{\dfrac{db}{d(1-r)}}{\dfrac{dz}{d(1-r)}}$$
+
+and
+
+$$s_3\cdot e=\dfrac{\dfrac{db}{d(1-r)}}{\dfrac{dz}{d(1-r)}}\cdot \dfrac{\dfrac{dz}{z}}{\dfrac{d(1-r)}{1-r}}=\dfrac{\dfrac{dx}{z}}{\dfrac{d(r-t)}{1-r}}=e_3.$$
+#>
 
 These three elasticity components combine to the overall elasticity $e$ in the following form:
 
@@ -796,7 +1105,11 @@ $$e=\dfrac{y}{z}e_1+e_2+e_3=\dfrac{\dfrac{dz}{z}}{\dfrac{d(1-r)}{1-r}}.$$
 
 Again, we can see in the formula what we have already discussed earlier: The overall elasticity $e$ describes by how much taxable income increases if the top net-of-tax rate increases.
 
-info("Derivation 3") # Run this line (Strg-Enter) to show info
+#< info "Derivation 3"
+Proof, that $e=\dfrac{y}{z}e_1+e_2+e_3$:
+
+$$\dfrac{y}{z}e_1+e_2+e_3=\dfrac{y}{z}\cdot \dfrac{\dfrac{dy}{y}}{\dfrac{d(1-r)}{1-r}}+\dfrac{\dfrac{dx}{z}}{\dfrac{d(r-t)}{1-r}}+\dfrac{\dfrac{db}{z}}{\dfrac{d(1-r)}{1-r}}=\dfrac{\dfrac{dy+db-dx}{z}}{\dfrac{d(1-r)}{1-r}}=\dfrac{\dfrac{dz}{z}}{\dfrac{d(1-r)}{1-r}}=e$$
+#>
 
 ### b) Deriving the optimal top tax rate
 
@@ -808,7 +1121,13 @@ $$T=r(z-\bar{z})+tx-N\cdot E(b).$$
 
 $E(b)$ depicts the average bargained earnings in the economy. $N$ describes the size of the population. As we assume that the government adjusts the demogrant $-T(0)$ to fully offset $E(b)$, we have to subtract $E(b)$ from taxes collected from top bracket tax payers. (Note that this is a strong assumption. You can see a little discussion on this topic in the *info*-section below.)
 
-info("Offset of bargaining effects") # Run this line (Strg-Enter) to show info
+#< info "Offset of bargaining effects"
+When we looked at compensation bargaining, we considered the fact that bargaining always comes at the expense of others. If top earners earn an additional bargained earning $b$ then $E(b)=b/N$ denotes the average bargained earnings in the economy. Piketty et al. assume that the government offsets $E(b)$ by adjusting the demogrant $-T(0)$ of its non-linear income tax schedule for $N$ individuals. It de facto subsidizes taxpayers before applying its income tax to compensate for lost income due to bargaining of top earners.
+
+This simplification is possible because we assume that $E(b)$ affects all individuals uniformly. This might not be the case. Piketty et al. show in the appendix of their paper that their model is also applicable if we assume that bargaining effects other individuals differently and that only top earners bargain.
+
+Another assumption that Piketty et al. implicitly made is that the government is able to observe $b$. (This is not trivial and can arguably be seen as questionable: Compensation bargaining is only possible because companies can't perfectly observe real economic product of their employees. It is hard to see why then the government should possess this ability.)
+#>
 
 If we differentiate tax collected from taxpayers in the top bracket $T$ with respect to top MTR $r$ and apply the findings we gathered on elasticities above, the **optimal top marginal tax rate** can then be calculated as:
 
@@ -816,11 +1135,49 @@ $$r^*=\dfrac{1+t\cdot a\cdot e_2+a\cdot e_3}{1+a\cdot e},$$
 
 where $a$ depicts the Pareto parameter of the top tail of the distribution $z/(z-\bar{z})>1$. (Note that it is not trivial to know $a$, $t$, $e$, $e_2$ and $e_3$. This is why we have looked at extensive empirical evidence to be able to make estimations of optimal tax rates using this formula.)
 
-info("Derivation 4") # Run this line (Strg-Enter) to show info
+#< info "Derivation 4"
+If we differentiate $T=r(z-\bar{z})+tx-N\cdot E(b)$ with respect to top MTR $r$ and set to zero, we obtain
+
+$$\dfrac{\partial T}{\partial r}=(z-\bar{z})+r\dfrac{\partial z}{\partial r}+t\dfrac{\partial x}{\partial r}-\dfrac{\partial (N\cdot E(b))}{\partial r}\overset{!}{=}0.$$
+
+This, we can translate into
+
+$$z-\bar{z}=r\dfrac{dz}{d(1-r)}-t\dfrac{dx}{d(r-t)}-\dfrac{db}{d(1-r)},$$
+
+using $dr=-d(1-r)$, $dr=d(r-t)$ and $N\cdot E(b)=b$.  
+If we use the formulas for the fractions $s_2$ and $s_3$ (or, alternatively that $s_2\cdot e=e_2$ and $s_3\cdot e=e_3$) we can derive
+
+$$s_2\dfrac{dz}{d(1-r)}=\dfrac{dx}{d(r-t)}$$
+
+and
+
+$$s_3\dfrac{dz}{d(1-r)}=\dfrac{db}{d(1-r)}.$$
+
+If we utilize these two terms in our equation we get
+
+$$z-\bar{z}=(r-t\cdot s_2-s_3)\dfrac{dz}{d(1-r)}.$$
+
+Employing the formula for overall elasticity $e$, we can rearrange this to
+
+$$\dfrac{z-\bar{z}}{z}=\dfrac{e(r-t\cdot s_2-s_3)}{(1-r)}$$
+
+and because 
+
+$$\dfrac{z-\bar{z}}{z}=\dfrac{1}{a}$$
+
+we get 
+
+$$r\cdot a\cdot e-t\cdot a\cdot s_2\cdot e-a\cdot s_3\cdot e=1-r$$
+
+which we can, using $s_2\cdot e=e_2$ and $s_3\cdot e=e_3$, finally rearrange to
+
+$$r^*=\dfrac{1+t\cdot a\cdot e_2+a\cdot e_3}{1+a\cdot e}.$$
+#>
 
 With the derivation of the optimal top tax rate $r^*$ we have reached the main proposition of Piketty et al.'s model. We want to take this opportunity to do another short quiz to analyse how changes in the different variables have an impact on this optimal top tax rate.
 
 ```{r "3_1_b"}
+#< task
 # Question 1: If we experience an increase in t, how does that influence our
 # optimal top tax rate r* if we assume that e2 > 0?
 # a) r* increases, too
@@ -840,17 +1197,56 @@ With the derivation of the optimal top tax rate $r^*$ we have reached the main p
 # b) r* decreases
 # c) r* stays the same
 # answer3 = "???" # Assign "a", "b" or "c" to 'answer3' and remove the comment
+#>
 
 answer1 = "a"
+#< hint
+display("Look at the formula we just derived for 'r*'. Maybe using an example with numbers on a piece of paper will help you answering the question")
+#>
 answer2 = "b"
+#< hint
+display("Take a look at the formula we just derived for 'r*'. Remember that 'e = (y/z)e1 + e2 + e3'.")
+#>
 answer3 = "a"
+#< hint
+display("This one is a little trickier, so I will provide you the solution: As r* <= 1 and as we add the same term on both sides of the fraction (remember that 'e = (y/z)e1 + e2 + e3'), r* actually increases when e3 increases. This is also intuitive because as bargaining is wasteful, the government will tackle more bargaining effort with higher taxes.")
+#>
 ```
 
 Great, now we have worked through the model that we will use to explain the observations we can make in our data. Before you move on, you can click the *info*-sections below if you want to find out how we can prove that in the optimal case $t^*=r^*$ or if you are interested in what would happen in our model if we had a positive social welfare weight on consumption of top earners.
 
-info("Optimal tax policy") # Run this line (Strg-Enter) to show info
+#< info "Optimal tax policy"
+So far, we assumed that the tax on sheltered income $t$ is given. But how should $t$ be set if that wasn't the case and the government tries to maximize tax revenue from top earners $T$?
 
-info("positive social welfare weights") # Run this line (Strg-Enter) to show info
+If we differentiate $T=r(z-\bar{z})+tx-N\cdot E(b)$ with respect to $t$ and set to zero and use the equation $z=\eta y-x$, we get
+
+$$\dfrac{\partial T}{\partial t}=-r\dfrac{\partial x}{\partial t}+x+t\dfrac{\partial x}{\partial t}\overset{!}{=}0.$$
+
+We can use the fact that
+
+$$\dfrac{dx}{dt}=-\dfrac{dx}{d(r-t)}$$
+to obtain
+
+$$x+(r-t)\dfrac{dx}{d(r-t)}=0.$$
+
+Because, by definition, $x\geq 0$, $r\geq t$ and $\dfrac{dx}{d(r-t)}\geq 0$, this can only be true if $t^*=r^*$.
+
+This means that, if the government has the power to change tax on sheltered income $t$, the government should set $t$ equal to top MTR $r$ to "improve efficiency and its ability to tax top incomes" as Piketty et al. (2014) find in their paper. This is consistent with our statement earlier that tax avoidance is harmful and the government aims to close tax-avoidance opportunities.
+#>
+
+#< info "positive social welfare weights"
+In the model we looked at so far the government put a social welfare weight of zero on marginal consumption of top earners. If we also allow for positive weights $0\leq g <1$ our formula for optimal top marginal tax rate becomes
+
+$$r^*=\dfrac{1-g+t\cdot a\cdot e_2+a\cdot e_3}{1-g+a\cdot e}.$$
+
+You can see that optimal top tax rate $r^*$ decreases with increasing welfare weight $g$:
+
+$$\dfrac{\partial r^*}{\partial g}=\dfrac{a(t\cdot e_2+e_3-e)}{(1-g+a\cdot e)^2}\leq 0$$
+
+because $e\geq t\cdot e_2+e_3$.
+
+This is intuitive, as an increasing $g$ leads to an increasing positive welfare impact of top incomes above the top tax threshold $\bar{z}$ and therefore the government has less incentive to reallocate those top incomes.
+#>
 
 *The derivations and interpretations in this partial exercise follow pages 5-16 of the paper.*
 
@@ -860,7 +1256,23 @@ In this exercise, we want to implement a short function that can calculate the o
 
 $$r^*=\dfrac{1+t\cdot a\cdot e_2+a\cdot e_3}{1+a\cdot e}$$
 
-info("If you have skipped Exercise 3.1") # Run this line (Strg-Enter) to show info
+#< info "If you have skipped Exercise 3.1"
+In *Exercise 3.1* we devised formulas for the utility function of top earners and for the function that describes tax revenue the government receives from top earners. We were able to use these formulas to gradually develop the just mentioned formula for an optimal top marginal tax rate the government can set to create maximum tax earnings among top earners and therefore create optimal welfare:
+
+$$r^*=\dfrac{1+t\cdot a\cdot e_2+a\cdot e_3}{1+a\cdot e}$$
+
+The elasticities that are used in this formula should be familiar from the first exercise:
+
+* $e$, as usual, depicts our overall elasticity of top taxable incomes to top marginal tax rate $r$ above a certain income threshold $\bar{z}$. It holds that $e=(y/z)e_1+e_2+e_3$.
+* $(y/z)e_1$ is the supply-side elasticity multiplied by the ratio between real product $y$ and real taxable income $z$. It describes that fraction of the overall change of taxable income that is due to a change in real economic productivity.
+* $e_2$ denotes the tax-avoidance elasticity, i.e. that part of the overall elasticity that is due to sheltering income from ordinary income taxes.
+* $e_3$ depicts the compensation-bargaining elasticity that describes that part of the overall elasticity which is due to compensation bargaining effects.
+
+We can also see two new variables:
+
+* $t$ denotes tax on sheltered income. (Sheltered income is income that isn't taxed with the ordinary marginal income tax rate $r$ and thus describes tax avoidance effects.)
+* $a$ depicts $z/(z-\bar{z})$, the Pareto parameter of the top tail of the distribution.
+#>
 
 We want to start with an example. You probably know the pq-formula:
 
@@ -882,9 +1294,11 @@ We use the function `sqrt()` to compute the square root and the syntax `x^y` to 
 In the next code chunk you can see how the pq-formula is implemented as a function that returns the two solutions using the R-computations we just introduced. Run the code to upload the function into our working environment.
 
 ```{r "3_2_example_1"}
+#< task
 pq.formula = function(p, q){
   return(c(-p/2 + sqrt((p/2)^2 - q), -p/2 - sqrt((p/2)^2 - q)))
 }
+#>
 ```
 
 You can see that the function gets the two variables p and q passed in the header of the function. Then, it computes the two zeros and concatenates them using the function `c()`. The result, an array with two values, is returned with the command `return()`.
@@ -896,13 +1310,26 @@ $$x^2+2x-3=0$$
 Now we can use `pq.formula` with the values $p=2$ and $q=-3$ to compute the two zeros of this equation:
 
 ```{r "3_2_example_2"}
+#< task
 pq.formula(2, -3)
+#>
 ```
 
 The function returns the two zeros $x_1=1$ and $x_2=-3$. You can see that the function uses the variables we pass it in the same order as they are defined in the header of the function.  
 Throughout this problem set we have already used a couple of different functions, like `read.table()`, `log()` or `filter()`, but now we also know how to program our own functions that we can then use in the same way.
 
-info("What about no zeros?") # Run this line (Strg-Enter) to show info
+#< info "What about no zeros?"
+As you might have noticed, our function only works when there actually are zeros to be computed. If there are none, our function will return error messages. To avoid this we can use an if-clause that only runs its code if its condition is evaluated as true:
+
+```
+pq.formula = function(p, q){
+  if((p/2)^2 - q > 0){
+    return(c(-p/2 + sqrt((p/2)^2 - q), -p/2 - sqrt((p/2)^2 - q)))
+  }
+}
+```
+But as we don't need this for our own tax function, we can ignore this.
+#>
 
 Let's utilize this to implement a function for our optimal top marginal tax rate $r^*$ step by step.
 
@@ -915,6 +1342,7 @@ As you can see we need the following variables to be able to obtain a solution: 
 Now, implement the formula for $r^*$ as code, using the variables `e`, `e2`, `e3`, `t` and `a` (You don't have to write a function, yet).
 
 ```{r "3_2_1"}
+#< task
 # First, we set all the variables to default values. We are going to put in
 # more meaningful numbers later.
 e = 0.3
@@ -925,15 +1353,18 @@ a = 1.2
 
 # Then, you can type in your formula here:
 
+#>
 (1+t*a*e2+a*e3)/(1+a*e)
 ```
 
 Now, we write a function named `top.tax` that gets passed the variables we need in the following order: $e$, $e_2$, $e_3$, $t$, $a$. Then, the function returns the optimal top tax rate, using the computation that we wrote in the last code chunk.
 
 ```{r "3_2_example_3"}
+#< task
 top.tax = function(e,e2,e3,t,a){
   return((1+t*a*e2+a*e3)/(1+a*e))
 }
+#>
 ```
 
 Now it's time to test our function. Let us assume that the variables have the following values: $e = 0.35$, $e_2=0.1$, $e_3=0.05$, $t=0.25$ and $a=1.8$. Call the function `top.tax` with these values. Make sure to use the values in the right order or, alternatively, assign the variables manually: `(e2 = 0.1, e = 0.35, ...)`.
@@ -968,11 +1399,19 @@ In the pure supply-side scenario, there is no tax avoidance and no compensation 
 Now, call the function `top.tax(e,e2,e3,t,a)` with the corresponding values to find out which optimal top tax rate our model suggests for this scenario. Assign your result to the variable `top_tax_supply` and show it.
 
 ```{r "4_b"}
+#< settings
+import.var=list("3.2 Theory - Developing a function"="top.tax")
+#>
+#< task
 # assign 'top_tax_supply'
 
 # show the variable
 
+#>
 top_tax_supply = top.tax(0.5, 0, 0, 0.2, 1.5)
+#< hint
+display("Call the function 'top.tax()' just as you did at the end of 'Exercise 3.2'. Don't forget to pass the variables in the right order or to assign them explicitly.")
+#>
 top_tax_supply
 ```
 
@@ -986,10 +1425,12 @@ This translates into a high tax-avoidance elasticity $e_2$. Piketty et al. consi
 Again, call the function `top.tax(e,e2,e3,t,a)` with these values and assign the result to the variable `top_tax_avoidance`.
 
 ```{r "4_c"}
+#< task
 # assign 'top_tax_avoidance'
 
 # show the variable
 
+#>
 top_tax_avoidance = top.tax(0.5, 0.3, 0, 0.2, 1.5)
 top_tax_avoidance
 ```
@@ -1005,10 +1446,12 @@ In this scenario, lower top tax rates lead to higher top income shares because t
 One last time, translate these estimates into a top marginal tax rate $r^*$ utilizing our function `top.tax()`. Assign the result to the variable `top_tax_bargaining` and show it.
 
 ```{r "4_d"}
+#< task
 # assign 'top_tax_bargaining'
 
 # show the variable
 
+#>
 top_tax_bargaining = top.tax(0.5, 0, 0.3, 0.2, 1.5)
 top_tax_bargaining
 ```
@@ -1076,6 +1519,7 @@ And also in other scenarios it might not be trivial to assume only revenue maxim
 The following code chunk is designed to show you how social welfare weight on top earners $g\in [0,1)$ can influence optimal top tax rate $r^*$ in the compensation bargaining scenario that we have considered. First, we implement the function `top.tax.g(e,e2,e3,t,a,g)` which is an extension of the function that we have developed in *Exercise 3.2* and follows the formula that Piketty et al. derive in their paper that also includes $g$ (See the last *info* box of *Exercise 3.1*). Then, we use the function `stat_function()` from the *ggplot* package to plot `top.tax.g(e,e2,e3,t,a,g)` in dependency of $g$ while using all the other values from our compensation-bargaining scenario ($e=0.5$, $e_2=0$, $e_3=0.3$, $a=1.5$ and $t=0.2$). (Again, this code serves mainly as an incitation - Just try to comprehend it and maybe test it for your own purposes.)
 
 ```{r "5_b_1"}
+#< task
 # First, we implement the function 'top.tax.g()':
 top.tax.g = function(e,e2,e3,t,a,g){
   return((1-g+t*a*e2+a*e3)/(1-g+a*e))
@@ -1094,6 +1538,7 @@ p = ggplot(data.frame(x = c(0, 1)), aes(x)) +
 
 # Finally, we show the plot:
 p
+#>
 ```
 
 You can see that, depending on the social welfare weight $g$, in the compensation-bargaining scenario with $e_3=0.3$ the optimal marginal top tax rate $r^*$ varies between $60\%$ for high welfare weights and $83\%$ for low welfare weights. This example serves to demonstrate that in order for a government to determine the optimal top tax rate $r^*$ it not only needs to know the decomposition of the income elasticity $e$ but also has to identify the welfare weight on top incomes $g$ that prevails in the society.
@@ -1103,7 +1548,9 @@ You can see that, depending on the social welfare weight $g$, in the compensatio
 At the end of this problem set, here is one last code chunk where you can play around a little bit with different values for the variables that we have discussed throughout the different exercises. Simply change the values the function `top.tax.g()` is called with and see what optimal top tax rate $r^*$ the model of Piketty et al. suggests. (Note that according to Piketty et al., the prevailing Pareto coefficient for many European countries is $a=2$.)
 
 ```{r "5_b_2"}
+#< task_notest
 top.tax.g(e=0.5, e2=0, e3=0.3, t=0.2, a=2, g=0)
+#>
 ```
 
 **Congratulations, you have successfully worked through this problem set!**  
